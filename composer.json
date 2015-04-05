@@ -1,0 +1,26 @@
+{
+    "name": "nimble/elastica-bundle",
+    "description": "Simple elasticsearch Symfony integration.",
+    "keywords": ["symfony", "elasticsearch", "bundle"],
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Filip Sobalski",
+            "email": "pinkeen@gmail.com",
+            "homepage": "http://sobalski.com/"
+        }
+    ],
+    "require": {
+        "php": ">=5.4",
+        "symfony/framework-bundle": ">=2.6",
+        "symfony/symfony": ">=2.6",
+	"elasticsearch/elasticsearch": "~1.0",
+    },
+    "suggest": {
+        "doctrine/orm": "Automatic listener-based entity synchronization."
+    },
+    "autoload":     {
+        "psr-4": { "Nimble\\ElastiaBundle": "src/ElasticBundle/" }
+    }
+}

@@ -1,0 +1,23 @@
+services:
+    nimble_elastic.client_factory:
+        class: Nimble\ElasticBundle\Client\ClientFactory
+
+    nimble_elastic.client_prototype:
+        abstract: true
+        class: Elasticsearch\Client
+        factory:
+            - @nimble_elastic.client_factory
+            - createClient
+        arguments:
+            - []
+
+    nimble_elastic.index_manager:
+        class: Nimble\ElasticBundle\Index\IndexManager
+
+    nimble_elastic.synchronizer:
+        class: Nimble\ElasticBundle\Synchronizer\Synchronizer
+
+    nimble_elastic.doctrine.orm.listener:
+        class: Nimble\ElasticBundle\Doctrine\ORM\LifecycleEventSubscriber
+        arguments:
+            - @nimble_elastic.synchronizer

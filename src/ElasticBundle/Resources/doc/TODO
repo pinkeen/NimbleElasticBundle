@@ -1,0 +1,14 @@
+- XML service configuration
+- Improve configuration (more error checking and defaults)
+- Alias support
+- Rolling zero-downtime repopulation (via aliases)
+- Bulk insert/update/delete
+- Deffered synchronization on kernel.terminate, command.terminate
+- Generic synchronization events/event listener (onUpdate, onCreate, onDelete) for manual sync
+- Resetting of single type
+- Logging configuration of elastica client
+- Additional logging
+- Events for major operations
+- Commands:
+    - Querying
+    - Get status (indexes created? mapping in sync?)
