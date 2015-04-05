@@ -1,5 +1,5 @@
 {
-    "name": "nimble/elastica-bundle",
+    "name": "nimble/elastic-bundle",
     "description": "Simple elasticsearch Symfony integration.",
     "keywords": ["symfony", "elasticsearch", "bundle"],
     "type": "symfony-bundle",
