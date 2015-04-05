@@ -15,12 +15,12 @@
         "php": ">=5.4",
         "symfony/framework-bundle": ">=2.6",
         "symfony/symfony": ">=2.6",
-	"elasticsearch/elasticsearch": "~1.0",
+	"elasticsearch/elasticsearch": "~1.0"
     },
     "suggest": {
         "doctrine/orm": "Automatic listener-based entity synchronization."
     },
     "autoload":     {
-        "psr-4": { "Nimble\\ElastiaBundle": "src/ElasticBundle/" }
+        "psr-4": { "Nimble\\ElastiaBundle\\": "src/ElasticBundle/" }
     }
 }
