@@ -2,9 +2,6 @@
 
 namespace Nimble\ElasticBundle\DependencyInjection;
 
-use Nimble\ElasticBundle\DependencyInjection\Compiler\RegisterIndexesPass;
-use Nimble\ElasticBundle\DependencyInjection\Compiler\RegisterSynchronizerPass;
-use Nimble\ElasticBundle\DependencyInjection\Compiler\RegisterTransformersPass;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Config\FileLocator;
@@ -30,23 +27,32 @@ class NimbleElasticExtension extends Extension
         $this->processClients($config['default_client'], $config['clients'], $container);
         $this->processIndexes($config['indexes'], $container);
         $this->processListeners($config['synchronization_listeners'], $container);
-
-        $container->addCompilerPass(new RegisterIndexesPass());
-        $container->addCompilerPass(new RegisterSynchronizerPass());
-        $container->addCompilerPass(new RegisterTransformersPass());
     }
 
     /**
-     * @param array $listeners
+     * @param string $defaultClient
+     * @param array $clientsConfig
+     * @param ContainerBuilder $container
      */
-    protected function processListeners(array $listeners, ContainerBuilder $container)
+    protected function processClients($defaultClient, array $clientsConfig, ContainerBuilder $container)
     {
-        if ($listeners['doctrine_orm']['enabled']) {
-            $listenerDefinition = $container->getDefinition('nimble_elastic.doctrine.orm.listener');
-            $listenerDefinition->addTag('doctrine.event_subscriber', [
-                'connection' => $listeners['doctrine_orm']['connection'],
-            ]);
+        if (!isset($clientsConfig[$defaultClient])) {
+            throw new InvalidConfigurationException(
+                sprintf('Default client "%s" must be configured in "nimble_elastic.clients".', $defaultClient)
+            );
         }
+
+        foreach ($clientsConfig as $clientName => $clientConfig) {
+            $clientServiceId = sprintf('nimble_elastic.client.%s', $clientName);
+
+            $clientDefinition = new DefinitionDecorator('nimble_elastic.client_prototype');
+            $clientDefinition->setClass('Elasticsearch\Client');
+            $clientDefinition->setArguments([$clientConfig]);
+
+            $container->setDefinition($clientServiceId, $clientDefinition);
+        }
+
+        $container->setAlias('nimble_elastic.client', sprintf('nimble_elastic.client.%s', $defaultClient));
     }
 
     /**
@@ -66,60 +72,6 @@ class NimbleElasticExtension extends Extension
         }
 
         return $mappings;
-    }
-
-    /**
-     * @param array $entitiesConfig
-     * @param string $indexName
-     * @param string $typeServiceId
-     * @param string $typeName
-     * @param ContainerBuilder $container
-     */
-    protected function processEntities(array $entitiesConfig, $indexName, $typeServiceId, $typeName, ContainerBuilder $container)
-    {
-        foreach ($entitiesConfig as $entityClass => $entityConfig) {
-            $synchronizerServiceId = sprintf('nimble_elastic.synchronizer.%s.%s.%s',
-                $indexName,
-                $typeName,
-                $container->camelize($entityClass)
-            );
-
-            $synchronizerDefinition = new DefinitionDecorator('nimble_elastic.synchronizer.prototype');
-
-            $synchronizerDefinition->replaceArgument(0, $entityClass);
-            $synchronizerDefinition->replaceArgument(1, new Reference($typeServiceId));
-            $synchronizerDefinition->replaceArgument(2, $entityConfig['on_create']);
-            $synchronizerDefinition->replaceArgument(3, $entityConfig['on_update']);
-            $synchronizerDefinition->replaceArgument(4, $entityConfig['on_delete']);
-
-            $container->setDefinition($synchronizerServiceId, $synchronizerDefinition);
-
-            $transformerDefinition = $container->getDefinition($entityConfig['transformer_service']);
-            $transformerDefinition->addTag('nimble_elastic.transformer', [
-                'index' => $indexName,
-                'type' => $typeName
-            ]);
-        }
-    }
-
-    /**
-     * @param array $typesConfig
-     * @param string $indexName
-     * @param string $indexServiceId
-     * @param ContainerBuilder $container
-     */
-    protected function processTypes(array $typesConfig, $indexName, $indexServiceId, ContainerBuilder $container)
-    {
-        foreach ($typesConfig as $typeName => $typeConfig) {
-            $typeServiceId = sprintf('%s.%s', $indexServiceId, $typeName);
-
-            $typeServiceDefinition = new Definition('Nimble\ElasticBundle\Type\Type', [$typeName]);
-            $typeServiceDefinition->setFactory([new Reference($indexServiceId), 'getType']);
-
-            $container->setDefinition($typeServiceId, $typeServiceDefinition);
-
-            $this->processEntities($typeConfig['entities'], $indexName, $typeServiceId, $typeName, $container);
-        }
     }
 
     /**
@@ -154,27 +106,78 @@ class NimbleElasticExtension extends Extension
     }
 
     /**
-     * @param string $defaultClient
-     * @param array $clientsConfig
+     * @param array $typesConfig
+     * @param string $indexName
+     * @param string $indexServiceId
      * @param ContainerBuilder $container
      */
-    protected function processClients($defaultClient, array $clientsConfig, ContainerBuilder $container)
+    protected function processTypes(array $typesConfig, $indexName, $indexServiceId, ContainerBuilder $container)
     {
-        if (!isset($clientsConfig[$defaultClient])) {
-            throw new InvalidConfigurationException(
-                sprintf('Default client "%s" must be configured in "nimble_elastic.clients".', $defaultClient)
+        foreach ($typesConfig as $typeName => $typeConfig) {
+            $typeServiceId = sprintf('%s.%s', $indexServiceId, $typeName);
+
+            $typeServiceDefinition = new Definition('Nimble\ElasticBundle\Type\Type', [$typeName]);
+            $typeServiceDefinition->setFactory([new Reference($indexServiceId), 'getType']);
+
+            $container->setDefinition($typeServiceId, $typeServiceDefinition);
+
+            $this->processEntities($typeConfig['entities'], $indexName, $typeServiceId, $typeName, $container);
+        }
+    }
+
+    /**
+     * @param array $entitiesConfig
+     * @param string $indexName
+     * @param string $typeServiceId
+     * @param string $typeName
+     * @param ContainerBuilder $container
+     */
+    protected function processEntities(array $entitiesConfig, $indexName, $typeServiceId, $typeName, ContainerBuilder $container)
+    {
+        $transformerManagerDefinition = $container->getDefinition('nimble_elastic.transformer_manager');
+
+        foreach ($entitiesConfig as $entityClass => $entityConfig) {
+            $synchronizerServiceId = sprintf('nimble_elastic.synchronizer.%s.%s.%s',
+                $indexName,
+                $typeName,
+                $container->camelize($entityClass)
             );
+
+            $synchronizerDefinition = new Definition('Nimble\ElasticBundle\Synchronizer\Synchronizer', [
+                $entityClass,
+                new Reference($typeServiceId),
+                $entityConfig['on_create'],
+                $entityConfig['on_update'],
+                $entityConfig['on_delete'],
+                new Reference('nimble_elastic.transformer_manager')
+            ]);
+
+            $synchronizerDefinition->addTag('nimble_elastic.synchronizer');
+            $container->setDefinition($synchronizerServiceId, $synchronizerDefinition);
+
+            /* Transformer service is optional because it can be registered via tags. */
+            if (null !== $entityConfig['transformer_service']) {
+                $transformerManagerDefinition->addMethodCall('registerTransformer', [
+                    new Reference($entityConfig['transformer_service']),
+                    $indexName,
+                    $typeName
+                ]);
+            }
         }
+    }
 
-        foreach ($clientsConfig as $clientName => $clientConfig) {
-            $clientServiceId = sprintf('nimble_elastic.client.%s', $clientName);
-
-            $clientDefinition = new DefinitionDecorator('nimble_elastic.client_prototype');
-            $clientDefinition->replaceArgument(0, $clientConfig);
-
-            $container->setDefinition($clientServiceId, $clientDefinition);
+    /**
+     * @param array $listeners
+     * @param ContainerBuilder $container
+     */
+    protected function processListeners(array $listeners, ContainerBuilder $container)
+    {
+        /* Enables doctrine orm event subscriber by tagging it. */
+        if ($listeners['doctrine_orm']['enabled']) {
+            $listenerDefinition = $container->getDefinition('nimble_elastic.doctrine.orm.listener');
+            $listenerDefinition->addTag('doctrine.event_subscriber', [
+                'connection' => $listeners['doctrine_orm']['connection'],
+            ]);
         }
-
-        $container->setAlias('nimble_elastic.client', sprintf('nimble_elastic.client.%s', $defaultClient));
     }
 }

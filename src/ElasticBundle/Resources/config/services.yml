@@ -4,12 +4,9 @@ services:
 
     nimble_elastic.client_prototype:
         abstract: true
-        class: Elasticsearch\Client
         factory:
             - @nimble_elastic.client_factory
             - createClient
-        arguments:
-            - []
 
     nimble_elastic.index_manager:
         class: Nimble\ElasticBundle\Index\IndexManager
@@ -25,13 +22,4 @@ services:
         arguments:
             - @nimble_elastic.synchronizer_manager
 
-    nimble_elastic.synchronizer.prototype:
-        abstract: true
-        class: Nimble\ElasticBundle\Synchronizer\Synchronizer
-        arguments:
-            - null
-            - null
-            - null
-            - null
-            - null
-            - @nimble_elastic.transformer_manager
+

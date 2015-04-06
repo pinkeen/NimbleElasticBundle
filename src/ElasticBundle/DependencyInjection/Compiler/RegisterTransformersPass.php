@@ -2,12 +2,13 @@
 
 namespace Nimble\ElasticBundle\DependencyInjection\Compiler;
 
-use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 
-class RegisterTransformersPass implements  CompilerPassInterface
+class RegisterTransformersPass extends AbstractCompilerPass
 {
+    static protected $tagName = 'nimble_elastic.transformer';
+
     /**
      * {@inheritdoc}
      */
@@ -15,10 +16,22 @@ class RegisterTransformersPass implements  CompilerPassInterface
     {
         $transformerManagerDefinition = $container->getDefinition('nimble_elastic.transformer_manager');
 
-        foreach ($container->findTaggedServiceIds('nimble_elastic.transformer') as $transformerServiceId => $tag) {
-            $transformerManagerDefinition->addMethodCall('registerTransformer', [
-                new Reference($transformerServiceId)
-            ]);
+        foreach ($container->findTaggedServiceIds(self::$tagName) as $transformerServiceId => $tags) {
+            foreach ($tags as $attributes) {
+                $this->validateTagAttributes($attributes, ['index', 'type'], $transformerServiceId, self::$tagName);
+                $this->validateServiceClass(
+                    $container->getDefinition($transformerServiceId)->getClass(),
+                    'Nimble\ElasticBundle\Transformer\TransformerInterface',
+                    $transformerServiceId,
+                    self::$tagName
+                );
+
+                $transformerManagerDefinition->addMethodCall('registerTransformer', [
+                    new Reference($transformerServiceId),
+                    $attributes['index'],
+                    $attributes['type']
+                ]);
+            }
         }
     }
 }

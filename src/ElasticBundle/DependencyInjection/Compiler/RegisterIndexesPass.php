@@ -4,10 +4,12 @@ namespace Nimble\ElasticBundle\DependencyInjection\Compiler;
 
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\Validator\Tests\Fixtures\Reference;
+use Symfony\Component\DependencyInjection\Reference;
 
-class RegisterIndexesPass implements  CompilerPassInterface
+class RegisterIndexesPass extends AbstractCompilerPass
 {
+    static protected $tagName = 'nimble_elastic.index';
+
     /**
      * {@inheritdoc}
      */
@@ -15,7 +17,14 @@ class RegisterIndexesPass implements  CompilerPassInterface
     {
         $indexManagerDefinition = $container->getDefinition('nimble_elastic.index_manager');
 
-        foreach ($container->findTaggedServiceIds('nimble_elastic.index') as $indexServiceId => $tag) {
+        foreach ($container->findTaggedServiceIds(self::$tagName) as $indexServiceId => $tag) {
+            $this->validateServiceClass(
+                $container->getDefinition($indexServiceId)->getClass(),
+                'Nimble\ElasticBundle\Index\Index',
+                $indexServiceId,
+                self::$tagName
+            );
+
             $indexManagerDefinition->addMethodCall('registerIndex', [
                 new Reference($indexServiceId)
             ]);

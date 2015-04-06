@@ -48,6 +48,10 @@ class ResetCommand extends ContainerAwareCommand
             $indexesToReset = [$indexName];
         }
 
+        if (empty($indexesToReset)) {
+            throw new \RuntimeException('No indexes found to reset.');
+        }
+
         foreach ($indexesToReset as $indexName) {
             $output->writeln(sprintf('Resetting index <info>%s</info>...', $indexName));
 

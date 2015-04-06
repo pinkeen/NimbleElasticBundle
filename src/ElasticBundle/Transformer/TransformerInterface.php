@@ -14,9 +14,9 @@ interface TransformerInterface
      * This allows to denormaliza data.
      *
      * @param object $entity
-     * @return Document[]|Document
+     * @return Document[]
      */
-    public function transformToDocument($entity);
+    public function transformToDocuments($entity);
 
     /**
      * Transforms entity into elasticsearch id(s).
@@ -26,9 +26,9 @@ interface TransformerInterface
      * This method is used during deletion where full transformation is not needed.
      *
      * @param object $entity
-     * @return int|string|int[]|string[]
+     * @return int[]|string[]
      */
-    public function transformToId($entity);
+    public function transformToIds($entity);
 
     /**
      * @return string

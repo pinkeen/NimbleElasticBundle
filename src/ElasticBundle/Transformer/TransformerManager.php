@@ -15,12 +15,13 @@ class TransformerManager
 
     /**
      * @param TransformerInterface $transformer
-     * @param string $className
      * @param string $indexName
      * @param string $typeName
      */
-    public function registerTransformer(TransformerInterface $transformer, $className, $indexName, $typeName)
+    public function registerTransformer(TransformerInterface $transformer, $indexName, $typeName)
     {
+        $className = $transformer->getClass();
+
         if ($this->hasTransformer($className, $indexName, $typeName)) {
             throw new TransformerAlreadyRegisteredException($className, $indexName, $typeName);
         }
@@ -64,13 +65,7 @@ class TransformerManager
      */
     public function transformToDocuments($entity, $indexName, $typeName)
     {
-        $documents = $this->getTransformer($entity, $indexName, $typeName)->transformToDocument($entity);
-
-        if (!is_array($documents)) {
-            return [$documents];
-        }
-
-        return $documents;
+        return $this->getTransformer($entity, $indexName, $typeName)->transformToDocuments($entity);
     }
 
     /**
@@ -81,12 +76,6 @@ class TransformerManager
      */
     public function transformToIds($entity, $indexName, $typeName)
     {
-        $ids = $this->getTransformer($entity, $indexName, $typeName)->transformToId($entity);
-
-        if (!is_array($ids)) {
-            return [$ids];
-        }
-
-        return $ids;
+        return $this->getTransformer($entity, $indexName, $typeName)->transformToIds($entity);
     }
 }

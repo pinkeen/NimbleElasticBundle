@@ -12,14 +12,14 @@ class SynchronizerManager
     /**
      * {@inheritdoc}
      */
-    public function registerEntitySynchronizer(Synchronizer $synchronizer)
+    public function registerSynchronizer(SynchronizerInterface $synchronizer)
     {
         $this->synchronizers[$synchronizer->getClassName()][] = $synchronizer;
     }
 
     /**
      * @param object $entity
-     * @return Synchronizer[]
+     * @return SynchronizerInterface[]
      */
     protected function getSynchronizers($entity)
     {

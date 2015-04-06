@@ -21,12 +21,12 @@ This bundle provides only basic functionalities, which means you will have to wr
 flexiblity in return. For example:
 * A mechanism for synchronizing your entities with ES is provided (doctrine listeners or you have to dispatch
 create/update/delete events manually).
-* A mechanism for transforming your entities into ES documents is provided but you have to write the actual transformer
-yourself. This is better for performance and a must if you want flexibility. It also allows you completetly
-decouple the ES from your model (no unnecessary getters needed on your entities, yay!).
-* No mechnanism for automagically transforming ES results back into your entities will be ever provided (probably),
-because this would seriously limit the flexibility. Usually you could implement this yourself in a few lines,
-with your performance considerations in mind.
+* A mechanism for transforming your entities into ES documents is provided but you have to write the actual 
+transformer yourself. This is better for performance and a must if you want flexibility. It also allows you 
+completetly decouple the ES from your model (no unnecessary getters needed on your entities, yay!).
+* No mechnanism for automagically transforming ES results back into your entities will be ever provided 
+(probably), because this would seriously limit the flexibility. Usually you could implement this yourself in 
+a few lines, with your performance considerations in mind.
 
 It will have great docs. ;)
 

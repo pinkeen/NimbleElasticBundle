@@ -7,23 +7,8 @@ use Nimble\ElasticBundle\Synchronizer\Exception\InvalidSynchronizationAction;
 use Nimble\ElasticBundle\Transformer\TransformerManager;
 use Nimble\ElasticBundle\Type\Type;
 
-class Synchronizer
+class Synchronizer implements SynchronizerInterface
 {
-    /**
-     * Create a document in ES.
-     */
-    const ACTION_CREATE = "create";
-
-    /**
-     * Update a document in ES.
-     */
-    const ACTION_UPDATE = "update";
-
-    /**
-     * Delete a document in ES.
-     */
-    const ACTION_DELETE = "delete";
-
     /**
      * @var string
      */
@@ -97,7 +82,7 @@ class Synchronizer
      */
     protected function validateClass($entity)
     {
-        if (get_class($entity) !== $this->className) {
+        if (!is_a($entity, $this->className)) {
             throw new UnexpectedTypeException($entity, $this->className);
         }
     }

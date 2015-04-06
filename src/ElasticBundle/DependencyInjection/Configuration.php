@@ -67,7 +67,7 @@ class Configuration implements ConfigurationInterface
                                             ->prototype('array')
                                                 ->children()
                                                     ->scalarNode('transformer_service')
-                                                        ->isRequired()
+                                                        ->defaultNull()
                                                     ->end()
                                                     ->enumNode('on_create')
                                                         ->values(['create', 'update', 'delete', false])

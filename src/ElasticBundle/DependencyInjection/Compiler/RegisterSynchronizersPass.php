@@ -4,10 +4,12 @@ namespace Nimble\ElasticBundle\DependencyInjection\Compiler;
 
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\Validator\Tests\Fixtures\Reference;
+use Symfony\Component\DependencyInjection\Reference;
 
-class RegisterSynchronizerPass implements  CompilerPassInterface
+class RegisterSynchronizersPass extends AbstractCompilerPass
 {
+    static protected $tagName = 'nimble_elastic.synchronizer';
+
     /**
      * {@inheritdoc}
      */
@@ -15,7 +17,14 @@ class RegisterSynchronizerPass implements  CompilerPassInterface
     {
         $synchronizerManagerDefinition = $container->getDefinition('nimble_elastic.synchronizer_manager');
 
-        foreach ($container->findTaggedServiceIds('nimble_elastic.synchronizer') as $synchronizerServiceId => $tag) {
+        foreach ($container->findTaggedServiceIds(self::$tagName) as $synchronizerServiceId => $tag) {
+            $this->validateServiceClass(
+                $container->getDefinition($synchronizerServiceId)->getClass(),
+                'Nimble\ElasticBundle\Synchronizer\SynchronizerInterface',
+                $synchronizerServiceId,
+                self::$tagName
+            );
+
             $synchronizerManagerDefinition->addMethodCall('registerSynchronizer', [
                 new Reference($synchronizerServiceId)
             ]);
