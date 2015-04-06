@@ -6,9 +6,7 @@ use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 /**
- * This is the class that validates and merges configuration from your app/config files
- *
- * To learn more see {@link http://symfony.com/doc/current/cookbook/bundles/extension.html#cookbook-bundles-extension-config-class}
+ * Configures the bundle.
  */
 class Configuration implements ConfigurationInterface
 {
@@ -71,14 +69,17 @@ class Configuration implements ConfigurationInterface
                                                     ->scalarNode('transformer_service')
                                                         ->isRequired()
                                                     ->end()
-                                                    ->booleanNode('create')
-                                                        ->defaultTrue()
+                                                    ->enumNode('on_create')
+                                                        ->values(['create', 'update', 'delete', false])
+                                                        ->defaultValue('create')
                                                     ->end()
-                                                    ->booleanNode('update')
-                                                        ->defaultTrue()
+                                                    ->enumNode('on_update')
+                                                        ->values(['create', 'update', 'delete', false])
+                                                        ->defaultValue('update')
                                                     ->end()
-                                                    ->booleanNode('delete')
-                                                        ->defaultTrue()
+                                                    ->enumNode('on_delete')
+                                                        ->values(['create', 'update', 'delete', false])
+                                                        ->defaultValue('delete')
                                                     ->end()
                                                 ->end()
                                             ->end()

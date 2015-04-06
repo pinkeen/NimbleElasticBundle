@@ -2,6 +2,9 @@
 
 namespace Nimble\ElasticBundle\DependencyInjection;
 
+use Nimble\ElasticBundle\DependencyInjection\Compiler\RegisterIndexesPass;
+use Nimble\ElasticBundle\DependencyInjection\Compiler\RegisterSynchronizerPass;
+use Nimble\ElasticBundle\DependencyInjection\Compiler\RegisterTransformersPass;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -30,11 +33,15 @@ class NimbleElasticExtension extends Extension
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $loader->load('services.yml');
 
-        echo json_encode($config, JSON_PRETTY_PRINT);
+        //echo json_encode($config, JSON_PRETTY_PRINT);
 
         $this->processClients($config['default_client'], $config['clients'], $container);
         $this->processIndexes($config['indexes'], $container);
         $this->processListeners($config['synchronization_listeners'], $container);
+
+        $container->addCompilerPass(new RegisterIndexesPass());
+        $container->addCompilerPass(new RegisterSynchronizerPass());
+        $container->addCompilerPass(new RegisterTransformersPass());
     }
 
     /**
@@ -70,11 +77,46 @@ class NimbleElasticExtension extends Extension
     }
 
     /**
-     * @param array $typesConfig
-     * @param $indexServiceId
+     * @param array $entitiesConfig
+     * @param string $indexName
+     * @param string $typeServiceId
+     * @param string $typeName
      * @param ContainerBuilder $container
      */
-    protected function processTypes(array $typesConfig, $indexServiceId, ContainerBuilder $container)
+    protected function processEntities(array $entitiesConfig, $indexName, $typeServiceId, $typeName, ContainerBuilder $container)
+    {
+        foreach ($entitiesConfig as $entityClass => $entityConfig) {
+            $synchronizerServiceId = sprintf('nimble_elastic.synchronizer.%s.%s.%s',
+                $indexName,
+                $typeName,
+                $container->camelize($entityClass)
+            );
+
+            $synchronizerDefinition = new DefinitionDecorator('nimble_elastic.synchronizer.prototype');
+
+            $synchronizerDefinition->replaceArgument(0, $entityClass);
+            $synchronizerDefinition->replaceArgument(1, new Reference($typeServiceId));
+            $synchronizerDefinition->replaceArgument(2, $entityConfig['on_create']);
+            $synchronizerDefinition->replaceArgument(3, $entityConfig['on_update']);
+            $synchronizerDefinition->replaceArgument(4, $entityConfig['on_delete']);
+
+            $container->setDefinition($synchronizerServiceId, $synchronizerDefinition);
+
+            $transformerDefinition = $container->getDefinition($entityConfig['transformer_service']);
+            $transformerDefinition->addTag('nimble_elastic.transformer', [
+                'index' => $indexName,
+                'type' => $typeName
+            ]);
+        }
+    }
+
+    /**
+     * @param array $typesConfig
+     * @param string $indexName
+     * @param string $indexServiceId
+     * @param ContainerBuilder $container
+     */
+    protected function processTypes(array $typesConfig, $indexName, $indexServiceId, ContainerBuilder $container)
     {
         foreach ($typesConfig as $typeName => $typeConfig) {
             $typeServiceId = sprintf('%s.%s', $indexServiceId, $typeName);
@@ -84,18 +126,7 @@ class NimbleElasticExtension extends Extension
 
             $container->setDefinition($typeServiceId, $typeServiceDefinition);
 
-            $synchronizerDefinition = $container->getDefinition('nimble_elastic.synchronizer');
-
-            foreach ($typeConfig['entities'] as $entityClassName => $entityConfig) {
-                $synchronizerDefinition->addMethodCall('registerEntitySynchronization', [
-                    $entityClassName,
-                    new Reference($typeServiceId),
-                    new Reference($entityConfig['transformer_service']),
-                    $entityConfig['create'],
-                    $entityConfig['update'],
-                    $entityConfig['delete'],
-                ]);
-            }
+            $this->processEntities($typeConfig['entities'], $indexName, $typeServiceId, $typeName, $container);
         }
     }
 
@@ -105,8 +136,6 @@ class NimbleElasticExtension extends Extension
      */
     protected function processIndexes(array $indexesConfig, ContainerBuilder $container)
     {
-        $indexManagerDefinition = $container->getDefinition('nimble_elastic.index_manager');
-
         foreach ($indexesConfig as $indexName => $indexConfig) {
             $indexServiceId = sprintf('nimble_elastic.index.%s', $indexName);
             $clientServiceId = 'nimble_elastic.client';
@@ -124,13 +153,11 @@ class NimbleElasticExtension extends Extension
                 $this->buildMappingConfiguration($typesConfig)
             ]);
 
+            $indexDefinition->addTag('nimble_elastic.index');
+
             $container->setDefinition($indexServiceId, $indexDefinition);
 
-            $indexManagerDefinition->addMethodCall('registerIndex', [
-                new Reference($indexServiceId)
-            ]);
-
-            $this->processTypes($typesConfig, $indexServiceId, $container);
+            $this->processTypes($typesConfig, $indexName, $indexServiceId, $container);
         }
     }
 

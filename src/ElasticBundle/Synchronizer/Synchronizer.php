@@ -2,146 +2,173 @@
 
 namespace Nimble\ElasticBundle\Synchronizer;
 
-use Nimble\ElasticBundle\Transformer\TransformerInterface;
+use Nimble\ElasticBundle\Exception\UnexpectedTypeException;
+use Nimble\ElasticBundle\Synchronizer\Exception\InvalidSynchronizationAction;
+use Nimble\ElasticBundle\Transformer\TransformerManager;
 use Nimble\ElasticBundle\Type\Type;
 
-class Synchronizer implements SynchronizerInterface
+class Synchronizer
 {
     /**
-     * @var SynchronizedEntity[]
+     * Create a document in ES.
      */
-    protected $synchronizations = [];
+    const ACTION_CREATE = "create";
 
     /**
-     * @var array
+     * Update a document in ES.
      */
-    protected $registeredSynchronizations;
+    const ACTION_UPDATE = "update";
 
     /**
-     * {@inheritdoc}
+     * Delete a document in ES.
      */
-    public function registerEntitySynchronization(
+    const ACTION_DELETE = "delete";
+
+    /**
+     * @var string
+     */
+    private $className;
+
+    /**
+     * @var Type
+     */
+    private $type;
+
+    /**
+     * @var string
+     */
+    private $onCreate;
+
+    /**
+     * @var string
+     */
+    private $onUpdate;
+
+    /**
+     * @var string
+     */
+    private $onDelete;
+
+    /**
+     * @var TransformerManager
+     */
+    private $transformer;
+
+    /**
+     * @param string $className
+     * @param Type $type
+     * @param string $onCreate
+     * @param string $onUpdate
+     * @param string $onDelete
+     * @param TransformerManager $transformer
+     */
+    public function __construct(
         $className,
         Type $type,
-        TransformerInterface $transformer,
-        $create = true,
-        $update = true,
-        $delete = true
+        $onCreate,
+        $onUpdate,
+        $onDelete,
+        TransformerManager $transformer
     ) {
-        $synchronized = new SynchronizedEntity($type, $transformer);
-
-        if ($create) {
-            $this->addSynchronization('create', $className, $synchronized);
-        }
-
-        if ($update) {
-            $this->addSynchronization('update', $className, $synchronized);
-        }
-
-        if ($delete) {
-            $this->addSynchronization('delete', $className, $synchronized);
-        }
-    }
-
-    protected function addSynchronization($action, $className, SynchronizedEntity $synchronization)
-    {
-        $typeName = $synchronization->getType()->getName();
-        $indexName = $synchronization->getType()->getIndex()->getName();
-
-        if (isset($this->registeredSynchronizations[$action][$className][$indexName][$typeName])) {
-            throw new EntitySynchronizationAlreadyRegisteredException($action, $className, $indexName, $typeName);
-        }
-
-        $this->registeredSynchronizations[$action][$className][$indexName][$typeName] = true;
-        $this->synchronizations[$action][$className][] = $synchronization;
+        $this->className = $className;
+        $this->type = $type;
+        $this->onCreate = $onCreate;
+        $this->onUpdate = $onUpdate;
+        $this->onDelete = $onDelete;
+        $this->transformer = $transformer;
     }
 
     /**
-     * @param string $action
-     * @param object $entity
-     * @return SynchronizedEntity[]
+     * @param string$action
      */
-    protected function getSynchronizations($action, $entity)
+    protected function validateAction($action)
     {
-        $className = get_class($entity);
-
-        if (!isset($this->synchronizations[$action][$className])) {
-            return null;
+        if (!$action) {
+            return;
         }
 
-        return $this->synchronizations[$action][$className];
+        if (!in_array($action, [self::ACTION_CREATE, self::ACTION_UPDATE, self::ACTION_DELETE])) {
+            throw new InvalidSynchronizationAction($action);
+        }
     }
 
     /**
-     * @param SynchronizedEntity[] $synchronizations
      * @param object $entity
      */
-    protected function performPutSynchronizations(array $synchronizations, $entity)
+    protected function validateClass($entity)
     {
-        foreach ($synchronizations as $synchronization) {
-            $documents = $synchronization->getTransformer()->transformToDocument($entity);
-
-            if (!is_array($documents)) {
-                $documents = [$documents];
-            }
-
-            $synchronization->getType()->putDocuments(
-                $documents
-            );
+        if (get_class($entity) !== $this->className) {
+            throw new UnexpectedTypeException($entity, $this->className);
         }
     }
 
     /**
-     * {@inheritdoc}
+     * @param $action
+     * @param $entity
      */
-    public function update($entity)
+    protected function performAction($action, $entity)
     {
-        if (!$synchronizations = $this->getSynchronizations('update', $entity)) {
-            return;
-        }
+        $this->validateClass($entity);
 
-        $this->performPutSynchronizations($synchronizations, $entity);
-    }
+        switch ($action) {
+            case self::ACTION_CREATE:
+            case self::ACTION_UPDATE:
+                $documents = $this->transformer->transformToDocuments(
+                    $entity,
+                    $this->type->getIndex()->getName(),
+                    $this->type->getName()
+                );
 
-    /**
-     * {@inheritdoc}
-     */
-    public function create($entity)
-    {
-        if (!$synchronizations = $this->getSynchronizations('create', $entity)) {
-            return;
-        }
+                $this->type->putDocuments($documents);
 
-        $this->performPutSynchronizations($synchronizations, $entity);
-    }
+                break;
 
-    /**
-     * {@inheritdoc}
-     */
-    public function delete($entity)
-    {
-        if (!$synchronizations = $this->getSynchronizations('delete', $entity)) {
-            return;
-        }
+            case self::ACTION_DELETE:
+                $ids = $this->transformer->transformToIds(
+                    $entity,
+                    $this->type->getIndex()->getName(),
+                    $this->type->getName()
+                );
 
-        foreach ($synchronizations as $synchronization) {
-            $ids = $synchronization->getTransformer()->transformToId($entity);
-
-            if (!is_array($ids)) {
-                $ids = [$ids];
-            }
-
-            $synchronization->getType()->deleteDocuments(
-                $ids
-            );
+                $this->type->deleteDocuments($ids);
         }
     }
 
     /**
-     * Flushes any scheduled actions (if applicable).
+     * @param $entity
      */
-    public function flush()
+    public function synchronizeCreate($entity)
     {
-        // No flushing in the base synchronizer.
+        if ($this->onCreate) {
+            $this->performAction($this->onCreate, $entity);
+        }
+    }
+
+    /**
+     * @param $entity
+     */
+    public function synchronizeUpdate($entity)
+    {
+        if ($this->onUpdate) {
+            $this->performAction($this->onUpdate, $entity);
+        }
+    }
+
+    /**
+     * @param $entity
+     */
+    public function synchronizeDelete($entity)
+    {
+        if ($this->onDelete) {
+            $this->performAction($this->onDelete, $entity);
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function getClassName()
+    {
+        return $this->className;
     }
 }

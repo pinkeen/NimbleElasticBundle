@@ -11,7 +11,15 @@
 - Logging configuration of elastica client
 - Additional logging
 - Events for major operations
-- Commands:
+- CLI Commands:
     - Querying
     - Get status (indexes created? mapping in sync?)
 - Tests :D
+- (idea/refactor) Transformers should not be used in SynchronizerManager directly but rather collected and used
+  through a Transformer service which will decide which transformer to use.
+- Register:
+    - indexes with IndexManager
+    - Synchronizations with SynchronizerManager
+    - Transformers with TransformerManager
+  using service tags and compiler passes.
+- Check if type is defined in Index::getType

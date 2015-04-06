@@ -4,19 +4,19 @@ namespace Nimble\ElasticBundle\Doctrine\ORM;
 
 use Doctrine\Common\EventSubscriber;
 use Doctrine\ORM\Event\LifecycleEventArgs;
-use Nimble\ElasticBundle\Synchronizer\SynchronizerInterface;
+use Nimble\ElasticBundle\Synchronizer\SynchronizerManager;
 
 class LifecycleEventSubscriber implements EventSubscriber
 {
     /**
-     * @var SynchronizerInterface
+     * @var SynchronizerManager
      */
     private $synchronizer;
 
     /**
-     * @param SynchronizerInterface $synchronizer
+     * @param SynchronizerManager $synchronizer
      */
-    public function __construct(SynchronizerInterface $synchronizer)
+    public function __construct(SynchronizerManager $synchronizer)
     {
         $this->synchronizer = $synchronizer;
     }
@@ -38,7 +38,7 @@ class LifecycleEventSubscriber implements EventSubscriber
      */
     public function postUpdate(LifecycleEventArgs $args)
     {
-        $this->synchronizer->update($args->getEntity());
+        $this->synchronizer->synchronizeUpdate($args->getEntity());
     }
 
     /**
@@ -46,7 +46,7 @@ class LifecycleEventSubscriber implements EventSubscriber
      */
     public function postPersist(LifecycleEventArgs $args)
     {
-        $this->synchronizer->create($args->getEntity());
+        $this->synchronizer->synchronizeCreate($args->getEntity());
     }
 
     /**
@@ -54,6 +54,6 @@ class LifecycleEventSubscriber implements EventSubscriber
      */
     public function postRemove(LifecycleEventArgs $args)
     {
-        $this->synchronizer->delete($args->getEntity());
+        $this->synchronizer->synchronizeDelete($args->getEntity());
     }
 }

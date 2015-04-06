@@ -29,4 +29,9 @@ interface TransformerInterface
      * @return array
      */
     public function transformToId($entity);
+
+    /**
+     * @return string
+     */
+    public function getClass();
 }
