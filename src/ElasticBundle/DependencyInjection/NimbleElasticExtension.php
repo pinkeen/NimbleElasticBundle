@@ -10,6 +10,7 @@ use Symfony\Component\DependencyInjection\DefinitionDecorator;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Loader;
+use Symfony\Component\Validator\Exception\RuntimeException;
 
 class NimbleElasticExtension extends Extension
 {
@@ -47,7 +48,12 @@ class NimbleElasticExtension extends Extension
 
             $clientDefinition = new DefinitionDecorator('nimble_elastic.client_prototype');
             $clientDefinition->setClass('Elasticsearch\Client');
-            $clientDefinition->setArguments([$clientConfig]);
+            $clientDefinition->setArguments([
+                $clientConfig['hosts'],
+                $clientConfig['logging']['enabled'] ? new Reference($clientConfig['logging']['service']) : null,
+            ]);
+
+            $clientDefinition->addTag('monolog.logger', ['channel' => 'elasticsearch']);
 
             $container->setDefinition($clientServiceId, $clientDefinition);
         }
