@@ -4,6 +4,7 @@ namespace Nimble\ElasticBundle\Index;
 
 use Elasticsearch\Client;
 use Nimble\ElasticBundle\Document;
+use Nimble\ElasticBundle\Index\Exception\TypeNotFoundException;
 use Nimble\ElasticBundle\Type\Type;
 
 class Index
@@ -24,27 +25,35 @@ class Index
     private $settings;
 
     /**
-     * @var array
-     */
-    private $mappings;
-
-    /**
      * @var Type[]
      */
-    private $types;
+    private $types = [];
 
     /**
      * @param string $name
      * @param Client $client
      * @param array $settings
-     * @param array $mappings
+     * @param array $types
      */
-    public function __construct($name, Client $client, array $settings, array $mappings)
+    public function __construct($name, Client $client, array $settings, array $types)
     {
         $this->name = $name;
         $this->client = $client;
         $this->settings = $settings;
-        $this->mappings = $mappings;
+
+        $this->buildTypes($types);
+    }
+
+    /**
+     * @param array $types
+     */
+    protected function buildTypes(array $types)
+    {
+        foreach ($types as $typeName => $typeData) {
+            $mappings = isset($typeData['mappings']) ? $typeData['mappings'] : null;
+
+            $this->types[$typeName] = new Type($typeName, $this, $mappings);
+        }
     }
 
     /**
@@ -92,8 +101,10 @@ class Index
             'index' => $this->name,
         ];
 
-        if (!empty($this->mappings)) {
-            $params['body']['mappings'] = $this->mappings;
+        $mappings = $this->getMappings();
+
+        if (!empty($mappings)) {
+            $params['body']['mappings'] = $mappings;
         }
 
         if (!empty($this->settings)) {
@@ -104,19 +115,38 @@ class Index
     }
 
     /**
+     * @return array
+     */
+    public function getMappings()
+    {
+        $mappings = [];
+
+        foreach ($this->types as $type) {
+            if (!empty($type->getMappings())) {
+                $mappings[$type->getName()]['properties'] = $type->getMappings();
+            }
+        }
+
+        return $mappings;
+    }
+
+    /**
+     * @param string $name
+     * @return bool
+     */
+    public function hasType($name)
+    {
+        return isset($this->types[$name]);
+    }
+
+    /**
      * @param string $name
      * @return Type
      */
     public function getType($name)
     {
-        if (!isset($this->types[$name])) {
-            $mappings = [];
-
-            if (isset($this->mappings[$name]['properties'])) {
-                $mappings = $this->mappings[$name]['properties'];
-            }
-
-            $this->types[$name] = new Type($name, $this, $mappings);
+        if (!$this->hasType($name)) {
+            throw new TypeNotFoundException($name, $this->name);
         }
 
         return $this->types[$name];

@@ -59,19 +59,20 @@ class NimbleElasticExtension extends Extension
      * @param array $typesConfig
      * @return array
      */
-    protected function buildMappingConfiguration(array $typesConfig)
+    protected function buildTypesSettings(array $typesConfig)
     {
-        $mappings = [];
+        $types = [];
 
         foreach ($typesConfig as $typeName => $typeConfig) {
             $typeMappings = $typeConfig['mappings'];
+            $types[$typeName] = [];
 
             if (!empty($typeMappings)) {
-                $mappings[$typeName]['properties'] = $typeMappings;
+                $types[$typeName]['mappings'] = $typeMappings;
             }
         }
 
-        return $mappings;
+        return $types;
     }
 
     /**
@@ -94,7 +95,7 @@ class NimbleElasticExtension extends Extension
                 $indexName,
                 new Reference($clientServiceId),
                 $indexConfig['settings'],
-                $this->buildMappingConfiguration($typesConfig)
+                $this->buildTypesSettings($typesConfig)
             ]);
 
             $indexDefinition->addTag('nimble_elastic.index');

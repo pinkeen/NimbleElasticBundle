@@ -27,7 +27,7 @@ class Type
      * @param Index $index
      * @param array $mappings
      */
-    public function __construct($name, Index $index, array $mappings)
+    public function __construct($name, Index $index, array $mappings = null)
     {
         $this->name = $name;
         $this->index = $index;
