@@ -1,6 +1,9 @@
 NimbleElasticBundle
 ===================
 
+[![Scrutinizer](https://scrutinizer-ci.com/g/NimbleCo/NimbleElasticBundle/badges/quality-score.png)](https://scrutinizer-ci.com/g/NimbleCo/NimbleElasticBundle/)
+[![SensioLabsInsight](https://insight.sensiolabs.com/projects/c542fed2-84e7-4516-ae24-85b873c574b7/mini.png)](https://insight.sensiolabs.com/projects/c542fed2-84e7-4516-ae24-85b873c574b7)
+
 A simple bundle that integrates _elasticsearch_ into your _Symfony_ project using the official
 [elasticsearch PHP client](https://github.com/elastic/elasticsearch-php).
 
@@ -37,3 +40,4 @@ The usual [Symfony stuff](http://symfony.com/doc/current/cookbook/bundles/instal
 The **composer.json** needs: `"nimble/elastic-bundle": "dev-master@dev",`.
 
 The **AppKernel.php** needs: `new Nimble\ElasticBundle\NimbleElasticBundle(),`.
+

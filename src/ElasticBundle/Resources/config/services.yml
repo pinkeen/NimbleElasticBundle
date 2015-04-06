@@ -22,4 +22,3 @@ services:
         arguments:
             - @nimble_elastic.synchronizer_manager
 
-

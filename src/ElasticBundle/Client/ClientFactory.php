@@ -7,7 +7,7 @@ use Elasticsearch\Client;
 class ClientFactory
 {
     /**
-     * @param array $params
+     * @param array $configuration
      * @return Client
      */
     public function createClient(array $configuration)
