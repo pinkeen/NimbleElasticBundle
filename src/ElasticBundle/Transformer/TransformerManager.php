@@ -21,7 +21,7 @@ class TransformerManager
      */
     public function registerTransformer(TransformerInterface $transformer, $className, $indexName, $typeName)
     {
-        if (isset($this->transfomers[$className][$indexName][$typeName])) {
+        if ($this->hasTransformer($className, $indexName, $typeName)) {
             throw new TransformerAlreadyRegisteredException($className, $indexName, $typeName);
         }
 
@@ -38,11 +38,22 @@ class TransformerManager
     {
         $className = get_class($entity);
 
-        if (!isset($this->transfomers[$className][$indexName][$typeName])) {
+        if (!$this->hasTransformer($className, $indexName, $typeName)) {
             throw new TransformerNotFoundException($className, $indexName, $typeName);
         }
 
         return $this->transfomers[$className][$indexName][$typeName];
+    }
+
+    /**
+     * @param string $className
+     * @param string $indexName
+     * @param string $typeName
+     * @return bool
+     */
+    protected function hasTransformer($className, $indexName, $typeName)
+    {
+        return isset($this->transfomers[$className][$indexName][$typeName]);
     }
 
     /**

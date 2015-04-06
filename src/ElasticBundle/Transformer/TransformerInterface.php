@@ -26,7 +26,7 @@ interface TransformerInterface
      * This method is used during deletion where full transformation is not needed.
      *
      * @param object $entity
-     * @return array
+     * @return int|string|int[]|string[]
      */
     public function transformToId($entity);
 

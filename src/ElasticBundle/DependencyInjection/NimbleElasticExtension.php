@@ -5,7 +5,6 @@ namespace Nimble\ElasticBundle\DependencyInjection;
 use Nimble\ElasticBundle\DependencyInjection\Compiler\RegisterIndexesPass;
 use Nimble\ElasticBundle\DependencyInjection\Compiler\RegisterSynchronizerPass;
 use Nimble\ElasticBundle\DependencyInjection\Compiler\RegisterTransformersPass;
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Config\FileLocator;
@@ -15,11 +14,6 @@ use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Loader;
 
-/**
- * This is the class that loads and manages your bundle configuration
- *
- * To learn more see {@link http://symfony.com/doc/current/cookbook/bundles/extension.html}
- */
 class NimbleElasticExtension extends Extension
 {
     /**
@@ -32,8 +26,6 @@ class NimbleElasticExtension extends Extension
 
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $loader->load('services.yml');
-
-        //echo json_encode($config, JSON_PRETTY_PRINT);
 
         $this->processClients($config['default_client'], $config['clients'], $container);
         $this->processIndexes($config['indexes'], $container);

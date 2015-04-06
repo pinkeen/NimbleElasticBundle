@@ -2,9 +2,6 @@
 
 namespace Nimble\ElasticBundle\Synchronizer;
 
-use Nimble\ElasticBundle\Transformer\TransformerInterface;
-use Nimble\ElasticBundle\Type\Type;
-
 class SynchronizerManager
 {
     /**
