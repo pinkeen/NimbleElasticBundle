@@ -1,3 +1,5 @@
+- Generic Population
+- ORM Population Helpers
 - XML service configuration
 - Improve configuration (more error checking and defaults)
 - Alias support
@@ -12,3 +14,4 @@
 - Commands:
     - Querying
     - Get status (indexes created? mapping in sync?)
+- Tests :D
