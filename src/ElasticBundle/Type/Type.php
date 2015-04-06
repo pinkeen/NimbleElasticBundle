@@ -18,7 +18,7 @@ class Type
     private $index;
 
     /**
-     * @var array
+     * @var array|null
      */
     private $mappings;
 
