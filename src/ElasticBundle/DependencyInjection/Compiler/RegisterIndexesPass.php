@@ -2,31 +2,15 @@
 
 namespace Nimble\ElasticBundle\DependencyInjection\Compiler;
 
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Reference;
-
-class RegisterIndexesPass extends AbstractCompilerPass
+class RegisterIndexesPass extends RegisterTaggedServiceWithManagerPass
 {
-    static protected $tagName = 'nimble_elastic.index';
-
-    /**
-     * {@inheritdoc}
-     */
-    public function process(ContainerBuilder $container)
+    function __construct()
     {
-        $indexManagerDefinition = $container->getDefinition('nimble_elastic.index_manager');
-
-        foreach ($container->findTaggedServiceIds(self::$tagName) as $indexServiceId => $tag) {
-            $this->validateServiceClass(
-                $container->getDefinition($indexServiceId)->getClass(),
-                'Nimble\ElasticBundle\Index\Index',
-                $indexServiceId,
-                self::$tagName
-            );
-
-            $indexManagerDefinition->addMethodCall('registerIndex', [
-                new Reference($indexServiceId)
-            ]);
-        }
+        parent::__construct(
+            'nimble_elastic.index',
+            'nimble_elastic.index_manager',
+            'registerIndex',
+            'Nimble\ElasticBundle\Index\Index'
+        );
     }
 }
