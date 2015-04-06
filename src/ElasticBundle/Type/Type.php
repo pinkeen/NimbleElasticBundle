@@ -35,6 +35,14 @@ class Type
     }
 
     /**
+     * @return array
+     */
+    public function getMappings()
+    {
+        return $this->mappings;
+    }
+
+    /**
      * @return string
      */
     public function getName()
