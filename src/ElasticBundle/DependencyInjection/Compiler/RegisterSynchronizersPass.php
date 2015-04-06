@@ -4,7 +4,7 @@ namespace Nimble\ElasticBundle\DependencyInjection\Compiler;
 
 class RegisterSynchronizersPass extends RegisterTaggedServiceWithManagerPass
 {
-    function __construct()
+    public function __construct()
     {
         parent::__construct(
             'nimble_elastic.synchronizer',

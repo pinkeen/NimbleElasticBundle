@@ -33,7 +33,7 @@ class RegisterTaggedServiceWithManagerPass extends AbstractCompilerPass
      * @param string $registrationMethodName
      * @param string $registeredServiceClassName
      */
-    function __construct($tagName, $managerServiceId, $registrationMethodName, $registeredServiceClassName)
+    public function __construct($tagName, $managerServiceId, $registrationMethodName, $registeredServiceClassName)
     {
         $this->tagName = $tagName;
         $this->managerServiceId = $managerServiceId;
