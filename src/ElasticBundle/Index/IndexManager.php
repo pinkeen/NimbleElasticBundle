@@ -2,6 +2,8 @@
 
 namespace Nimble\ElasticBundle\Index;
 
+use Nimble\ElasticBundle\Index\Exception\IndexNotFoundException;
+
 class IndexManager
 {
     /**
@@ -30,7 +32,7 @@ class IndexManager
     public function getIndex($name)
     {
         if (!$this->hasIndex($name)) {
-            return null;
+            throw new IndexNotFoundException($name);
         }
 
         return $this->indexes[$name];

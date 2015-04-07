@@ -2,6 +2,7 @@
 
 namespace Nimble\ElasticBundle\Command;
 
+use Nimble\ElasticBundle\Index\Exception\TypeNotFoundException;
 use Nimble\ElasticBundle\Index\IndexManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
@@ -19,6 +20,7 @@ class ResetCommand extends ContainerAwareCommand
             ->setName('nimble:elastic:reset')
             ->setDescription('Resets and index or all indexes.')
             ->addOption('index', 'i', InputOption::VALUE_OPTIONAL, 'Name of the index to reset. All are reset if null.')
+            ->addOption('type', 't', InputOption::VALUE_OPTIONAL, 'Name of the type to reset.')
         ;
     }
 
@@ -31,32 +33,81 @@ class ResetCommand extends ContainerAwareCommand
     }
 
     /**
+     * @param OutputInterface $output
+     */
+    protected function writeOK(OutputInterface $output)
+    {
+        $output->writeln('<fg=green>OK</fg=green>');
+    }
+
+    /**
+     * @param array $indexNames
+     * @param OutputInterface $output
+     */
+    protected function resetIndexes(array $indexNames, OutputInterface $output)
+    {
+        foreach ($indexNames as $indexName) {
+            $output->write(sprintf('Resetting index <info>%s</info> ... ', $indexName));
+
+            $this->getIndexManager()->getIndex($indexName)->reset();
+
+            $this->writeOK($output);
+        }
+    }
+
+    /**
+     * @param array $indexNames
+     * @param string $typeName
+     * @param OutputInterface $output
+     */
+    protected function resetType(array $indexNames, $typeName, OutputInterface $output)
+    {
+        $typeFound = false;
+
+        foreach ($indexNames as $indexName) {
+            $index = $this->getIndexManager()->getIndex($indexName);
+
+            if (!$index->hasType($typeName)) {
+                continue;
+            }
+
+            $output->write(sprintf('Resetting type <info>%s.%s</info> ... ', $indexName, $typeName));
+
+            $index->getType($typeName)->reset();
+            $typeFound = true;
+
+            $this->writeOK($output);
+        }
+
+        if (!$typeFound) {
+            throw new TypeNotFoundException($typeName);
+        }
+    }
+
+    /**
      * {@inheritdoc}
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $indexManager = $this->getIndexManager();
-        $indexesToReset = $indexManager->getIndexNames();
 
         $indexName = $input->getOption('index');
+        $typeName = $input->getOption('type');
 
         if (null !== $indexName) {
-            if (!$indexManager->hasIndex($indexName)) {
-                throw new \InvalidArgumentException(sprintf('Index "%s" does not exist.', $indexName));
-            }
-
-            $indexesToReset = [$indexName];
+            $indexNames = [$indexName];
+        } else {
+            $indexNames = $indexManager->getIndexNames();
         }
 
-        if (empty($indexesToReset)) {
-            throw new \RuntimeException('No indexes found to reset.');
+        if (empty($indexNames)) {
+            throw new \RuntimeException('No indexes found.');
         }
 
-        foreach ($indexesToReset as $indexName) {
-            $output->writeln(sprintf('Resetting index <info>%s</info>...', $indexName));
-
-            $index = $indexManager->getIndex($indexName);
-            $index->reset();
+        if (null !== $typeName) {
+            $this->resetType($indexNames, $typeName, $output);
+        } else {
+            $this->resetIndexes($indexNames, $output);
         }
     }
 }

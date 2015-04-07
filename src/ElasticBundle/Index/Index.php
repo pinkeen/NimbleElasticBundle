@@ -4,7 +4,7 @@ namespace Nimble\ElasticBundle\Index;
 
 use Elasticsearch\Client;
 use Nimble\ElasticBundle\Document;
-use Nimble\ElasticBundle\Index\Exception\TypeNotFoundException;
+use Nimble\ElasticBundle\Exception\TypeNotFoundException;
 use Nimble\ElasticBundle\Type\Type;
 
 class Index
@@ -50,10 +50,23 @@ class Index
     protected function buildTypes(array $types)
     {
         foreach ($types as $typeName => $typeData) {
-            $mappings = isset($typeData['mappings']) ? $typeData['mappings'] : null;
+
+            $mappings = null;
+
+            if (isset($typeData['mappings'])) {
+                $mappings = ['properties' => $typeData['mappings']];
+            }
 
             $this->types[$typeName] = new Type($typeName, $this, $mappings);
         }
+    }
+
+    /**
+     * @return Client
+     */
+    public function getClient()
+    {
+        return $this->client;
     }
 
     /**
@@ -65,6 +78,8 @@ class Index
     }
 
     /**
+     * Checks if the index exists in ES.
+     *
      * @return bool
      */
     public function exists()
@@ -123,7 +138,7 @@ class Index
 
         foreach ($this->types as $type) {
             if (!empty($type->getMappings())) {
-                $mappings[$type->getName()]['properties'] = $type->getMappings();
+                $mappings[$type->getName()] = $type->getMappings();
             }
         }
 

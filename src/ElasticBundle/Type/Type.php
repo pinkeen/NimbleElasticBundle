@@ -2,6 +2,7 @@
 
 namespace Nimble\ElasticBundle\Type;
 
+use Elasticsearch\Client;
 use Nimble\ElasticBundle\Document;
 use Nimble\ElasticBundle\Index\Index;
 
@@ -32,6 +33,83 @@ class Type
         $this->name = $name;
         $this->index = $index;
         $this->mappings = $mappings;
+    }
+
+    /**
+     * @return string
+     */
+    protected function getIndexName()
+    {
+        return $this->index->getName();
+    }
+
+    /**
+     * Creates client request params appending options that define the index and type.
+     *
+     * @param array $params
+     * @return array
+     */
+    protected function createRequestParams(array $params = [])
+    {
+        return array_merge([
+            'index' => $this->getIndexName(),
+            'type' => $this->getName(),
+        ], $params);
+    }
+
+    /**
+     * @return Client
+     */
+    public function getClient()
+    {
+        return $this->index->getClient();
+    }
+
+    /**
+     * Checks if the index exists in ES.
+     *
+     * @return bool
+     */
+    public function exists()
+    {
+        return $this->getClient()->indices()->exists(
+            $this->createRequestParams()
+        );
+    }
+
+    /**
+     * Creates the type mapping in ES.
+     */
+    public function createMappings()
+    {
+        if (empty($this->mappings)) {
+            return;
+        }
+
+        $this->getClient()->indices()->putMapping(
+            $this->createRequestParams([
+                'body' => [$this->name => $this->mappings]
+            ])
+        );
+    }
+
+    /**
+     * Deletes the type mappings in ES.
+     */
+    public function deleteMappings()
+    {
+        $this->getClient()->indices()->deleteMapping(
+            $this->createRequestParams()
+        );
+    }
+
+    /**
+     * Resets the type mappings in ES.
+     */
+    public function reset()
+    {
+        $this->deleteMappings();
+        $this->createMappings();
     }
 
     /**
