@@ -119,8 +119,10 @@ class NimbleElasticExtension extends Extension
      */
     protected function processTypes(array $typesConfig, $indexName, $indexServiceId, ContainerBuilder $container)
     {
+        $populatorManagerServiceDefinition = $container->getDefinition('nimble_elastic.populator_manager');
+
         foreach ($typesConfig as $typeName => $typeConfig) {
-            $typeServiceId = sprintf('%s.%s', $indexServiceId, $typeName);
+            $typeServiceId = sprintf('nimble_elastic.type.%s.%s', $indexName, $typeName);
 
             $typeServiceDefinition = new Definition('Nimble\ElasticBundle\Type\Type', [$typeName]);
             $typeServiceDefinition->setFactory([new Reference($indexServiceId), 'getType']);
@@ -128,6 +130,39 @@ class NimbleElasticExtension extends Extension
             $container->setDefinition($typeServiceId, $typeServiceDefinition);
 
             $this->processEntities($typeConfig['entities'], $indexName, $typeServiceId, $typeName, $container);
+
+            /* TODO: Break this into function. Allow to register fetchers via tags. */
+            if (isset($typeConfig['fetcher'])) {
+                if (count($typeConfig['fetcher']) > 1) {
+                    throw new InvalidConfigurationException(sprintf('Type "%s.%s" must have only one fetcher defined.'));
+                }
+
+                $fetcherServiceId = null;
+
+                if (isset($typeConfig['fetcher']['service'])) {
+                    $fetcherServiceId = $typeConfig['fetcher']['service'];
+                } elseif (isset($typeConfig['fetcher']['doctrine_orm_entity'])) {
+                    $fetcherServiceId = sprintf("nimble.elastic.fetcher.%s.%s", $indexName, $typeName);
+
+                    $fetcherServiceDefinition = new Definition(
+                        'Nimble\ElasticBundle\Doctrine\ORM\Populator\DoctrineORMPopulationFetcher',
+                        [
+                            new Reference('doctrine.orm.entity_manager'),
+                            $typeConfig['fetcher']['doctrine_orm_entity']
+                        ]
+                    );
+
+                    $container->setDefinition($fetcherServiceId, $fetcherServiceDefinition);
+                }
+
+                if ($fetcherServiceId) {
+                    $populatorManagerServiceDefinition->addMethodCall('registerFetcher', [
+                        new Reference($fetcherServiceId),
+                        $indexName,
+                        $typeName
+                    ]);
+                }
+            }
         }
     }
 

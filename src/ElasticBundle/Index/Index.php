@@ -168,6 +168,14 @@ class Index
     }
 
     /**
+     * @return Type[]
+     */
+    public function getTypes()
+    {
+        return $this->types;
+    }
+
+    /**
      * @param string $type
      * @param Document $document
      */

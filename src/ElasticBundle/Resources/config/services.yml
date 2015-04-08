@@ -17,6 +17,11 @@ services:
     nimble_elastic.transformer_manager:
         class: Nimble\ElasticBundle\Transformer\TransformerManager
 
+    nimble_elastic.populator_manager:
+        class: Nimble\ElasticBundle\Populator\PopulatorManager
+        arguments:
+            - @nimble_elastic.transformer_manager
+
     nimble_elastic.doctrine.orm.listener:
         class: Nimble\ElasticBundle\Doctrine\ORM\LifecycleEventSubscriber
         arguments:
