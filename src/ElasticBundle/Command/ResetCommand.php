@@ -17,7 +17,7 @@ class ResetCommand extends ContainerAwareCommand
     protected function configure()
     {
         $this
-            ->setName('nimble:elastic:reset')
+            ->setName('elastic:reset')
             ->setDescription('Resets and index or all indexes.')
             ->addOption('index', 'i', InputOption::VALUE_OPTIONAL, 'Name of the index to reset. All are reset if null.')
             ->addOption('type', 't', InputOption::VALUE_OPTIONAL, 'Name of the type to reset.')

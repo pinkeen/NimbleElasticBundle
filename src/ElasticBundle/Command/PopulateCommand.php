@@ -20,7 +20,7 @@ class PopulateCommand extends ContainerAwareCommand
     protected function configure()
     {
         $this
-            ->setName('nimble:elastic:populate')
+            ->setName('elastic:populate')
             ->setDescription('Populates indexes and types.')
             ->addOption('index', 'i', InputOption::VALUE_OPTIONAL, 'Name of the index to populate.')
             ->addOption('type', 't', InputOption::VALUE_OPTIONAL, 'Name of the type to populate.')
