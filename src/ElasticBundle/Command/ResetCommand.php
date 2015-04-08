@@ -2,7 +2,7 @@
 
 namespace Nimble\ElasticBundle\Command;
 
-use Nimble\ElasticBundle\Index\Exception\TypeNotFoundException;
+use Nimble\ElasticBundle\Exception\TypeNotFoundException;
 use Nimble\ElasticBundle\Index\IndexManager;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;

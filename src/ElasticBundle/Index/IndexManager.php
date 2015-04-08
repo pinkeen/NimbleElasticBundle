@@ -2,7 +2,7 @@
 
 namespace Nimble\ElasticBundle\Index;
 
-use Nimble\ElasticBundle\Index\Exception\IndexNotFoundException;
+use Nimble\ElasticBundle\Exception\IndexNotFoundException;
 
 class IndexManager
 {
