@@ -3,6 +3,7 @@
 namespace Nimble\ElasticBundle\Type;
 
 use Elasticsearch\Client;
+use Nimble\ElasticBundle\ArrayUtilities;
 use Nimble\ElasticBundle\Document;
 use Nimble\ElasticBundle\Index\Index;
 
@@ -110,6 +111,26 @@ class Type
     {
         $this->deleteMappings();
         $this->createMappings();
+    }
+
+    /**
+     * Checks whether configured mapping is in sync with ES.
+     *
+     * @return bool
+     */
+    public function checkMappingSync()
+    {
+        $result = $this->getClient()->indices()->getMapping(
+            $this->createRequestParams()
+        );
+
+        $mappings =
+            isset($result[$this->getIndexName()]['mappings'][$this->name]) ?
+                $result[$this->getIndexName()]['mappings'][$this->name] :
+                null
+        ;
+
+        return ArrayUtilities::deepCompare($mappings, $this->mappings);
     }
 
     /**

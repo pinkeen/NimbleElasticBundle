@@ -49,6 +49,7 @@ class ResetCommand extends ContainerAwareCommand
         foreach ($indexNames as $indexName) {
             $output->write(sprintf('Resetting index <info>%s</info> ... ', $indexName));
 
+            var_dump($this->getIndexManager()->getIndex($indexName)->checkMappingSync());
             $this->getIndexManager()->getIndex($indexName)->reset();
 
             $this->writeOK($output);

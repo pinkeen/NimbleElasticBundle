@@ -217,6 +217,22 @@ class Index
     }
 
     /**
+     * Checks whether configured mapping is in sync with ES.
+     *
+     * @return bool
+     */
+    public function checkMappingSync()
+    {
+        foreach ($this->types as $type) {
+            if (!$type->checkMappingSync()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * @param array|string $query Array that will be serialized or raw JSON.
      * @param array $options
      * @param string $type
