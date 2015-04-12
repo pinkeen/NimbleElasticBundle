@@ -72,6 +72,11 @@ class Populator
     public function populate($batchSize, ProgressBar $progress = null)
     {
         $count = $this->fetcher->getEntityCount();
+
+        if ($count === 0) {
+            return 0;
+        }
+
         $documentCount = 0;
 
         $offset = 0;

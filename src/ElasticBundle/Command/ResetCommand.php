@@ -4,12 +4,11 @@ namespace Nimble\ElasticBundle\Command;
 
 use Nimble\ElasticBundle\Exception\TypeNotFoundException;
 use Nimble\ElasticBundle\Index\IndexManager;
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class ResetCommand extends ContainerAwareCommand
+class ResetCommand extends AbstractBaseCommand
 {
     /**
      * {@inheritdoc}
@@ -33,25 +32,17 @@ class ResetCommand extends ContainerAwareCommand
     }
 
     /**
-     * @param OutputInterface $output
-     */
-    protected function writeOK(OutputInterface $output)
-    {
-        $output->writeln('<fg=green>OK</fg=green>');
-    }
-
-    /**
      * @param array $indexNames
      * @param OutputInterface $output
      */
     protected function resetIndexes(array $indexNames, OutputInterface $output)
     {
         foreach ($indexNames as $indexName) {
-            $output->write(sprintf('Resetting index <info>%s</info> ... ', $indexName));
+            $this->writeTaskStart($output, sprintf('Resetting index <info>%s</info>', $indexName));
 
             $this->getIndexManager()->getIndex($indexName)->reset();
 
-            $this->writeOK($output);
+            $this->writeTaskSuccess($output);
         }
     }
 
@@ -71,12 +62,12 @@ class ResetCommand extends ContainerAwareCommand
                 continue;
             }
 
-            $output->write(sprintf('Resetting type <info>%s.%s</info> ... ', $indexName, $typeName));
+            $this->writeTaskStart($output, sprintf('Resetting type <info>%s.%s</info> ... ', $indexName, $typeName));
 
             $index->getType($typeName)->reset();
             $typeFound = true;
 
-            $this->writeOK($output);
+            $this->writeTaskSuccess($output);
         }
 
         if (!$typeFound) {
@@ -89,6 +80,8 @@ class ResetCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $this->configureFormatter($output);
+
         $indexManager = $this->getIndexManager();
 
         $indexName = $input->getOption('index');
@@ -109,5 +102,7 @@ class ResetCommand extends ContainerAwareCommand
         } else {
             $this->resetIndexes($indexNames, $output);
         }
+
+        $this->writeSuccessMessage($output, 'Reset finished successfully.');
     }
 }

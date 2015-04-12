@@ -5,6 +5,7 @@ namespace Nimble\ElasticBundle\Index;
 use Elasticsearch\Client;
 use Nimble\ElasticBundle\Document;
 use Nimble\ElasticBundle\Exception\TypeNotFoundException;
+use Nimble\ElasticBundle\SearchResults;
 use Nimble\ElasticBundle\Type\Type;
 
 class Index
@@ -228,7 +229,7 @@ class Index
      * @param array|string $query Array that will be serialized or raw JSON.
      * @param array $options
      * @param string $type
-     * @return array
+     * @return SearchResults
      */
     public function search($query, array $options = [], $type = null)
     {
@@ -241,6 +242,6 @@ class Index
             $params['type'] = $type;
         }
 
-        return $this->client->search($params);
+        return new SearchResults($this->client->search($params));
     }
 }

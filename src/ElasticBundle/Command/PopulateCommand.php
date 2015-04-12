@@ -2,17 +2,15 @@
 
 namespace Nimble\ElasticBundle\Command;
 
-use Nimble\ElasticBundle\Exception\TypeNotFoundException;
 use Nimble\ElasticBundle\Index\IndexManager;
 use Nimble\ElasticBundle\Populator\PopulatorManager;
 use Nimble\ElasticBundle\Type\Type;
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
-use Symfony\Component\Console\Helper\ProgressBar;
+
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class PopulateCommand extends ContainerAwareCommand
+class PopulateCommand extends AbstractBaseCommand
 {
     /**
      * {@inheritdoc}
@@ -45,20 +43,6 @@ class PopulateCommand extends ContainerAwareCommand
     }
 
     /**
-     * @param OutputInterface $output
-     * @return ProgressBar
-     */
-    protected function createProgressBar(OutputInterface $output)
-    {
-        $progress = new ProgressBar($output);
-
-        $progress->setBarWidth(50);
-        $progress->setFormat("%current%/%max% (%percent:2s%%) [%bar%] %elapsed:6s% (EST %estimated:6s%) %memory:6s%");
-
-        return $progress;
-    }
-
-    /**
      * @param Type $type
      * @param int $batchSize
      * @param OutputInterface $output
@@ -67,15 +51,19 @@ class PopulateCommand extends ContainerAwareCommand
     {
         $progress = $this->createProgressBar($output);
 
-        $output->writeln(sprintf('Populating type <info>%s.%s</info> ...',
+        $output->writeln(sprintf('Populating type <info>%s.%s</info>.',
             $type->getIndex()->getName(),
             $type->getName()
         ));
 
         $count = $this->getPopulatorManager()->createPopulator($type)->populate($batchSize, $progress);
 
-        $output->writeln('');
-        $output->writeln(sprintf('Successfully populated %d documents.', $count));
+        if ($count === 0) {
+            $output->writeln('<warning>No data found to populate.</warning>');
+            return;
+        }
+
+        $this->writeSuccessMessage($output, sprintf('Successfully populated <info>%d</info> documents.', $count));
     }
 
     /**
@@ -83,6 +71,8 @@ class PopulateCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $this->configureFormatter($output);
+
         $indexManager = $this->getIndexManager();
 
         $indexName = $input->getOption('index');
