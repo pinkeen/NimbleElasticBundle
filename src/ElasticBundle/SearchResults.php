@@ -36,12 +36,18 @@ class SearchResults implements \Iterator
     protected $_index = 0;
 
     /**
+     * @var array
+     */
+    protected $aggregations = [];
+
+    /**
      * @param array $data
      */
     public function __construct(array $data)
     {
         $this->totalTime = isset($data['took']) ? $data['took'] : null;
         $this->hasTimedOut = isset($data['timed_out']) ? $data['timed_out'] : null;
+        $this->aggregations = isset($data['aggregations']) ? $data['aggregations'] : [];
 
         if (isset($data['hits'])) {
             $this->totalCount = $data['hits']['total'];
@@ -103,6 +109,31 @@ class SearchResults implements \Iterator
         return $this->hits;
     }
 
+    /**
+     * @param string $name
+     * @return array|null
+     */
+    public function getAggregation($name)
+    {
+        return isset($this->aggregations[$name]) ?
+            $this->aggregations[$name] : null;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasAggregations()
+    {
+        return !empty($this->aggregations);
+    }
+
+    /**
+     * @return array
+     */
+    public function getAggregations()
+    {
+        return $this->aggregations;
+    }
 
     /**
      * return int
