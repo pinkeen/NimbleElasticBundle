@@ -11,8 +11,10 @@ class Hit
     const ID_DATA_KEY = '_id';
     const EXPLANATION_DATA_KEY = '_explanation';
     const VERSION_DATA_KEY = '_version';
+    const SORT_DATA_KEY = 'sort';
 
     const FIELDS_DATA_KEY = 'fields';
+
 
     /**
      * @var string
@@ -108,6 +110,7 @@ class Hit
             self::INDEX_DATA_KEY,
             self::EXPLANATION_DATA_KEY,
             self::VERSION_DATA_KEY,
+            self::SORT_DATA_KEY,
         ]));
     }
 
@@ -138,6 +141,31 @@ class Hit
     public function getRawData()
     {
         return $this->data;
+    }
+
+    /**
+     * Returns value used for sorting or array of all if index is null.
+     *
+     * Returns null if not available.
+     *
+     * @param int|null $index
+     * @return mixed|null
+     */
+    public function getSortValue($index = null)
+    {
+        if (!array_key_exists(self::SORT_DATA_KEY, $this->data)) {
+            return null;
+        }
+
+        if (null === $index) {
+            return $this->data[self::SORT_DATA_KEY];
+        }
+
+        if (isset($this->data[self::SORT_DATA_KEY][$index])) {
+            return $this->data[self::SORT_DATA_KEY][$index];
+        }
+
+        return null;
     }
 
     /**
