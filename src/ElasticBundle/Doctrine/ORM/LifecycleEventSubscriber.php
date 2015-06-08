@@ -28,7 +28,7 @@ class LifecycleEventSubscriber implements EventSubscriber
     {
         return [
             'postUpdate',
-            'postRemove',
+            'preRemove',
             'postPersist',
         ];
     }
@@ -52,7 +52,7 @@ class LifecycleEventSubscriber implements EventSubscriber
     /**
      * @param LifecycleEventArgs $args
      */
-    public function postRemove(LifecycleEventArgs $args)
+    public function preRemove(LifecycleEventArgs $args)
     {
         $this->synchronizer->synchronizeDelete($args->getEntity());
     }
