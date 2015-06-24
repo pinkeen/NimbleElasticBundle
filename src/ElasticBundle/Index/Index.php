@@ -3,6 +3,7 @@
 namespace Nimble\ElasticBundle\Index;
 
 use Elasticsearch\Client;
+use Elasticsearch\Common\Exceptions\Missing404Exception;
 use Nimble\ElasticBundle\Document;
 use Nimble\ElasticBundle\Exception\TypeNotFoundException;
 use Nimble\ElasticBundle\SearchResults;
@@ -193,14 +194,22 @@ class Index
     /**
      * @param string $type
      * @param string|int $id
+     * @return bool Returns false if document didn't exist.
      */
     public function deleteDocument($type, $id)
     {
-        $this->client->delete([
-            'index' => $this->name,
-            'type' => $type,
-            'id' => $id,
-        ]);
+        try {
+            $this->client->delete([
+                'index' => $this->name,
+                'type' => $type,
+                'id' => $id,
+            ]);
+        } catch (Missing404Exception $exception) {
+            /* Do nothing, just ignore not synched. */
+            return false;
+        }
+
+        return true;
     }
 
     /**

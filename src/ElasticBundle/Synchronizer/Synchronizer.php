@@ -2,7 +2,6 @@
 
 namespace Nimble\ElasticBundle\Synchronizer;
 
-use Elasticsearch\Common\Exceptions\Missing404Exception;
 use Nimble\ElasticBundle\Exception\UnexpectedTypeException;
 use Nimble\ElasticBundle\Synchronizer\Exception\InvalidSynchronizationAction;
 use Nimble\ElasticBundle\Transformer\TransformerManager;
@@ -116,11 +115,7 @@ class Synchronizer implements SynchronizerInterface
                     $this->type->getName()
                 );
 
-                try {
-                    $this->type->deleteDocuments($ids);
-                } catch (Missing404Exception $exception) {
-                    /* Do nothing, just ignore not synched. */
-                }
+                $this->type->deleteDocuments($ids);
         }
     }
 
