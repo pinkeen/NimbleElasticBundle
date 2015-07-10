@@ -190,10 +190,12 @@ class NimbleElasticExtension extends Extension
                 $entityConfig['on_create'],
                 $entityConfig['on_update'],
                 $entityConfig['on_delete'],
-                new Reference('nimble_elastic.transformer_manager')
+                new Reference('nimble_elastic.transformer_manager'),
+                $entityConfig['logger_service'] ? new Reference($entityConfig['logger_service']) : null,
             ]);
 
             $synchronizerDefinition->addTag('nimble_elastic.synchronizer');
+
             $container->setDefinition($synchronizerServiceId, $synchronizerDefinition);
 
             /* Transformer service is optional because it can be registered via tags. */

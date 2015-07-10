@@ -2,10 +2,12 @@
 
 namespace Nimble\ElasticBundle\Synchronizer;
 
+use Nimble\ElasticBundle\Document;
 use Nimble\ElasticBundle\Exception\UnexpectedTypeException;
 use Nimble\ElasticBundle\Synchronizer\Exception\InvalidSynchronizationAction;
 use Nimble\ElasticBundle\Transformer\TransformerManager;
 use Nimble\ElasticBundle\Type\Type;
+use Psr\Log\LoggerInterface;
 
 class Synchronizer implements SynchronizerInterface
 {
@@ -40,12 +42,18 @@ class Synchronizer implements SynchronizerInterface
     private $transformer;
 
     /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
      * @param string $className
      * @param Type $type
      * @param string $onCreate
      * @param string $onUpdate
      * @param string $onDelete
      * @param TransformerManager $transformer
+     * @param LoggerInterface $logger
      */
     public function __construct(
         $className,
@@ -53,7 +61,8 @@ class Synchronizer implements SynchronizerInterface
         $onCreate,
         $onUpdate,
         $onDelete,
-        TransformerManager $transformer
+        TransformerManager $transformer,
+        LoggerInterface $logger = null
     ) {
         $this->className = $className;
         $this->type = $type;
@@ -61,6 +70,7 @@ class Synchronizer implements SynchronizerInterface
         $this->onUpdate = $onUpdate;
         $this->onDelete = $onDelete;
         $this->transformer = $transformer;
+        $this->logger = $logger;
     }
 
     /**
@@ -95,27 +105,50 @@ class Synchronizer implements SynchronizerInterface
     {
         $this->validateClass($entity);
 
+        $indexName = $this->type->getIndex()->getName();
+        $typeName = $this->type->getName();
+        $ids = [];
+
         switch ($action) {
             case self::ACTION_CREATE:
             case self::ACTION_UPDATE:
                 $documents = $this->transformer->transformToDocuments(
                     $entity,
-                    $this->type->getIndex()->getName(),
-                    $this->type->getName()
+                    $indexName,
+                    $typeName
                 );
 
                 $this->type->putDocuments($documents);
+
+                if (null !== $this->logger) {
+                    $ids = array_map(
+                        function (Document $doc) {
+                            return $doc->getId();
+                        },
+                        $documents
+                    );
+                }
 
                 break;
 
             case self::ACTION_DELETE:
                 $ids = $this->transformer->transformToIds(
                     $entity,
-                    $this->type->getIndex()->getName(),
-                    $this->type->getName()
+                    $indexName,
+                    $typeName
                 );
 
                 $this->type->deleteDocuments($ids);
+        }
+
+        if (null !== $this->logger) {
+            $this->logger->debug(sprintf('Performed %s synchronization for entity "%s" to "%s/%s" type, affected document ids: ["%s"].',
+                $action,
+                get_class($entity),
+                $indexName,
+                $typeName,
+                implode(', ', $ids)
+            ));
         }
     }
 
