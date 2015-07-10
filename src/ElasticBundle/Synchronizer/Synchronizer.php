@@ -142,8 +142,8 @@ class Synchronizer implements SynchronizerInterface
         }
 
         if (null !== $this->logger) {
-            $this->logger->debug(sprintf('Performed %s synchronization for entity "%s" to "%s/%s" type, affected document ids: ["%s"].',
-                $action,
+            $this->logger->info(sprintf('Performed %s synchronization for entity "%s" to "%s/%s" type, affected document ids: ["%s"].',
+                strtoupper($action),
                 get_class($entity),
                 $indexName,
                 $typeName,
