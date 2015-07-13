@@ -2,6 +2,7 @@
 
 namespace Nimble\ElasticBundle\Transformer;
 
+use Nimble\ElasticBundle\ClassUtils;
 use Nimble\ElasticBundle\Document;
 use Nimble\ElasticBundle\Transformer\Exception\TransformerAlreadyRegisteredException;
 use Nimble\ElasticBundle\Transformer\Exception\TransformerNotFoundException;
@@ -22,7 +23,7 @@ class TransformerManager
     {
         $className = $transformer->getClass();
 
-        if ($this->hasTransformer($className, $indexName, $typeName)) {
+        if (isset($this->transfomers[$className][$indexName][$typeName])) {
             throw new TransformerAlreadyRegisteredException($className, $indexName, $typeName);
         }
 
@@ -39,22 +40,13 @@ class TransformerManager
     {
         $className = get_class($entity);
 
-        if (!$this->hasTransformer($className, $indexName, $typeName)) {
+        $classKey = ClassUtils::findClassKey($className, $this->transfomers);
+
+        if (!$classKey) {
             throw new TransformerNotFoundException($className, $indexName, $typeName);
         }
 
-        return $this->transfomers[$className][$indexName][$typeName];
-    }
-
-    /**
-     * @param string $className
-     * @param string $indexName
-     * @param string $typeName
-     * @return bool
-     */
-    protected function hasTransformer($className, $indexName, $typeName)
-    {
-        return isset($this->transfomers[$className][$indexName][$typeName]);
+        return $this->transfomers[$classKey][$indexName][$typeName];
     }
 
     /**
