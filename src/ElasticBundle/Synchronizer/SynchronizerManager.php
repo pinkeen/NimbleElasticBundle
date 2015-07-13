@@ -2,6 +2,8 @@
 
 namespace Nimble\ElasticBundle\Synchronizer;
 
+use Nimble\ElasticBundle\ClassUtils;
+
 class SynchronizerManager
 {
     /**
@@ -23,13 +25,13 @@ class SynchronizerManager
      */
     protected function getSynchronizers($entity)
     {
-        $className = get_class($entity);
+        $classKey = ClassUtils::findClassKey(get_class($entity), $this->synchronizers);
 
-        if (!isset($this->synchronizers[$className])) {
+        if (!$classKey) {
             return [];
         }
 
-        return $this->synchronizers[$className];
+        return $this->synchronizers[$classKey];
     }
 
     /**
