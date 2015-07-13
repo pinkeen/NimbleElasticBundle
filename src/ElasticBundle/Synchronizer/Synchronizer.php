@@ -71,6 +71,10 @@ class Synchronizer implements SynchronizerInterface
         $this->onDelete = $onDelete;
         $this->transformer = $transformer;
         $this->logger = $logger;
+
+        $this->validateAction($onCreate);
+        $this->validateAction($onUpdate);
+        $this->validateAction($onDelete);
     }
 
     /**
@@ -103,8 +107,6 @@ class Synchronizer implements SynchronizerInterface
      */
     protected function performAction($action, $entity)
     {
-        $this->validateClass($entity);
-
         $indexName = $this->type->getIndex()->getName();
         $typeName = $this->type->getName();
         $ids = [];
@@ -157,6 +159,8 @@ class Synchronizer implements SynchronizerInterface
      */
     public function synchronizeCreate($entity)
     {
+        $this->validateClass($entity);
+
         if ($this->onCreate) {
             $this->performAction($this->onCreate, $entity);
         }
@@ -167,6 +171,8 @@ class Synchronizer implements SynchronizerInterface
      */
     public function synchronizeUpdate($entity)
     {
+        $this->validateClass($entity);
+
         if ($this->onUpdate) {
             $this->performAction($this->onUpdate, $entity);
         }
@@ -177,6 +183,8 @@ class Synchronizer implements SynchronizerInterface
      */
     public function synchronizeDelete($entity)
     {
+        $this->validateClass($entity);
+
         if ($this->onDelete) {
             $this->performAction($this->onDelete, $entity);
         }
