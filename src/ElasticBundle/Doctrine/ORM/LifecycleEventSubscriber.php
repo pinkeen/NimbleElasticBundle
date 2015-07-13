@@ -4,10 +4,21 @@ namespace Nimble\ElasticBundle\Doctrine\ORM;
 
 use Doctrine\Common\EventSubscriber;
 use Doctrine\ORM\Event\LifecycleEventArgs;
+use Doctrine\ORM\Event\PostFlushEventArgs;
+use Doctrine\ORM\Events;
 use Nimble\ElasticBundle\Synchronizer\SynchronizerManager;
 
 class LifecycleEventSubscriber implements EventSubscriber
 {
+    const ACTION_UPDATE = "UPDATE";
+    const ACTION_CREATE = "CREATE";
+    const ACTION_DELETE = "DELETE";
+
+    /**
+     * @var array
+     */
+    protected $buffer = [];
+
     /**
      * @var SynchronizerManager
      */
@@ -27,10 +38,33 @@ class LifecycleEventSubscriber implements EventSubscriber
     public function getSubscribedEvents()
     {
         return [
-            'postUpdate',
-            'preRemove',
-            'postPersist',
+            Events::postUpdate,
+            Events::preRemove,
+            Events::postPersist,
+            Events::postFlush
         ];
+    }
+
+    /**
+     * @param PostFlushEventArgs $args
+     */
+    public function postFlush(PostFlushEventArgs $args)
+    {
+        foreach ($this->buffer as $event) {
+            switch ($event['action']) {
+                case self::ACTION_CREATE:
+                    $this->synchronizer->synchronizeCreate($event['entity']);
+                    break;
+
+                case self::ACTION_UPDATE:
+                    $this->synchronizer->synchronizeUpdate($event['entity']);
+                    break;
+
+                case self::ACTION_DELETE:
+                    $this->synchronizer->synchronizeDelete($event['entity']);
+                    break;
+            }
+        }
     }
 
     /**
@@ -38,7 +72,10 @@ class LifecycleEventSubscriber implements EventSubscriber
      */
     public function postUpdate(LifecycleEventArgs $args)
     {
-        $this->synchronizer->synchronizeUpdate($args->getEntity());
+        $this->buffer[] = [
+            'action' => self::ACTION_UPDATE,
+            'entity' => $args->getEntity()
+        ];
     }
 
     /**
@@ -46,7 +83,10 @@ class LifecycleEventSubscriber implements EventSubscriber
      */
     public function postPersist(LifecycleEventArgs $args)
     {
-        $this->synchronizer->synchronizeCreate($args->getEntity());
+        $this->buffer[] = [
+            'action' => self::ACTION_CREATE,
+            'entity' => $args->getEntity()
+        ];
     }
 
     /**
@@ -54,6 +94,9 @@ class LifecycleEventSubscriber implements EventSubscriber
      */
     public function preRemove(LifecycleEventArgs $args)
     {
-        $this->synchronizer->synchronizeDelete($args->getEntity());
+        $this->buffer[] = [
+            'action' => self::ACTION_DELETE,
+            'entity' => $args->getEntity()
+        ];
     }
 }
