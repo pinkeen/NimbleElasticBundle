@@ -102,8 +102,8 @@ class Synchronizer implements SynchronizerInterface
     }
 
     /**
-     * @param $action
-     * @param $entity
+     * @param string $action
+     * @param object $entity
      */
     protected function performAction($action, $entity)
     {
