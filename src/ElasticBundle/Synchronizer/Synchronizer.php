@@ -14,37 +14,37 @@ class Synchronizer implements SynchronizerInterface
     /**
      * @var string
      */
-    private $className;
+    protected $className;
 
     /**
      * @var Type
      */
-    private $type;
+    protected $type;
 
     /**
      * @var string
      */
-    private $onCreate;
+    protected $onCreate;
 
     /**
      * @var string
      */
-    private $onUpdate;
+    protected $onUpdate;
 
     /**
      * @var string
      */
-    private $onDelete;
+    protected $onDelete;
 
     /**
      * @var TransformerManager
      */
-    private $transformer;
+    protected $transformer;
 
     /**
      * @var LoggerInterface
      */
-    private $logger;
+    protected $logger;
 
     /**
      * @param string $className
