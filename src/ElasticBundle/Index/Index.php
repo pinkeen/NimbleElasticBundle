@@ -235,6 +235,26 @@ class Index
     }
 
     /**
+     * @param array|string $body
+     * @param array $options
+     * @param string $type
+     * @return array
+     */
+    protected function buildParams($body, array $options, $type = null)
+    {
+        $params = array_merge([
+            'index' => $this->name,
+            'body' => $body,
+        ], $options);
+
+        if (null !== $type) {
+            $params['type'] = $type;
+        }
+
+        return $params;
+    }
+
+    /**
      * @param array|string $query Array that will be serialized or raw JSON.
      * @param array $options
      * @param string $type
@@ -242,15 +262,20 @@ class Index
      */
     public function search($query, array $options = [], $type = null)
     {
-        $params = array_merge([
-            'index' => $this->name,
-            'body' => $query,
-        ], $options);
+        return new SearchResults($this->client->search(
+            $this->buildParams($query, $options, $type)
+        ));
+    }
 
-        if (null !== $type) {
-            $params['type'] = $type;
-        }
-
-        return new SearchResults($this->client->search($params));
+    /**
+     * @param array|string $query
+     * @param array $options
+     * @param string $type
+     */
+    public function deleteByQuery($query, array $options = [], $type)
+    {
+        $this->client->deleteByQuery(
+            $this->buildParams($query, $options, $type)
+        );
     }
 }

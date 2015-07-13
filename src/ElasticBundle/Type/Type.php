@@ -177,4 +177,13 @@ class Type
     {
         return $this->index->search($query, $options, $this->name);
     }
+
+    /**
+     * @param array|string $query
+     * @param array $options
+     */
+    public function deleteByQuery($query, array $options = [])
+    {
+        $this->index->deleteByQuery($query, $options, $this->name);
+    }
 }
