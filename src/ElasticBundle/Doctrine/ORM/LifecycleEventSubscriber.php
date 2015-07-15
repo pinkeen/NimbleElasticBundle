@@ -65,6 +65,8 @@ class LifecycleEventSubscriber implements EventSubscriber
                     break;
             }
         }
+
+        $this->buffer = [];
     }
 
     /**
