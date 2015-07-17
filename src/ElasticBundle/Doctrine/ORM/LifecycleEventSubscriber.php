@@ -6,6 +6,7 @@ use Doctrine\Common\EventSubscriber;
 use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Event\PostFlushEventArgs;
 use Doctrine\ORM\Events;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Nimble\ElasticBundle\Synchronizer\SynchronizerManager;
 
 class LifecycleEventSubscriber implements EventSubscriber
@@ -18,6 +19,11 @@ class LifecycleEventSubscriber implements EventSubscriber
      * @var array
      */
     protected $buffer = [];
+
+    /**
+     * @var array
+     */
+    protected $identifiers = [];
 
     /**
      * @var SynchronizerManager
@@ -50,6 +56,16 @@ class LifecycleEventSubscriber implements EventSubscriber
      */
     public function postFlush(PostFlushEventArgs $args)
     {
+        /* Restore identifiers of entities being removed, because doctrine clears them.
+         * This may have unintended consequences.
+         * See http://www.doctrine-project.org/jira/browse/DDC-1680
+         * and https://groups.google.com/forum/#!topic/doctrine-user/bTukzq0QrSE (Pavel Horal's msg) */
+        foreach ($this->buffer as $event) {
+            $this->restoreEntityIdentifier($event['entity']);
+        }
+
+        $this->identifiers = [];
+
         foreach ($this->buffer as $event) {
             switch ($event['action']) {
                 case self::ACTION_CREATE:
@@ -96,9 +112,46 @@ class LifecycleEventSubscriber implements EventSubscriber
      */
     public function preRemove(LifecycleEventArgs $args)
     {
+        $this->storeEntityIdentifier($args);
+
         $this->buffer[] = [
             'action' => self::ACTION_DELETE,
-            'entity' => $args->getEntity()
+            'entity' => $args->getEntity(),
         ];
+    }
+
+    /**
+     * @param LifecycleEventArgs $args
+     * @return array
+     */
+    protected function storeEntityIdentifier(LifecycleEventArgs $args)
+    {
+        $em = $args->getEntityManager();
+        $entity = $args->getEntity();
+
+        $this->identifiers[spl_object_hash($entity)] = [
+            $em->getUnitOfWork()->getEntityIdentifier($entity),
+            $em->getClassMetadata(get_class($entity))
+        ];
+    }
+
+    /**
+     * @param object $entity
+     */
+    protected function restoreEntityIdentifier($entity)
+    {
+        $hash = spl_object_hash($entity);
+
+        if (!isset($this->identifiers[$hash])) {
+            return;
+        }
+
+        /**
+         * @var ClassMetadata $class
+         * @var array $identifier
+         */
+        list($identifier, $class) = $this->identifiers[$hash];
+
+        $class->setIdentifierValues($entity, $identifier);
     }
 }
