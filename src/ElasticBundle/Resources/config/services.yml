@@ -1,6 +1,8 @@
 services:
     nimble_elastic.client_factory:
         class: Nimble\ElasticBundle\Client\ClientFactory
+        arguments:
+            - @ring_php.collector_middleware
 
     nimble_elastic.client_prototype:
         abstract: true
