@@ -3,6 +3,7 @@
 namespace Nimble\ElasticBundle\Client;
 
 use Elasticsearch\Client;
+use Elasticsearch\ClientBuilder;
 use Psr\Log\LoggerInterface;
 
 class ClientFactory
@@ -14,10 +15,16 @@ class ClientFactory
      */
     public function createClient(array $hosts, LoggerInterface $logger = null)
     {
-        return new Client([
-            'hosts' => $hosts,
-            'logObject' => $logger,
-            'logging' => null !== $logger,
-        ]);
+        $builder =  ClientBuilder::create();
+
+        $builder
+            ->setHosts($hosts)
+        ;
+
+        if (null !== $logger) {
+            $builder->setLogger($logger);
+        }
+
+        return $builder->build();
     }
 }
