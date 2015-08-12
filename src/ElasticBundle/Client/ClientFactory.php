@@ -4,22 +4,13 @@ namespace Nimble\ElasticBundle\Client;
 
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
-use Pinkeen\ApiDebugBundle\Bridge\RingPHP\DataCollectorMiddleware;
+use Pinkeen\ApiDebugBundle\Bridge\RingPHP\Middleware\DataCollectorMiddleware;
+use Pinkeen\ApiDebugBundle\Bridge\RingPHP\Service\RingPHPHandlerFactory;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\ContainerAware;
 
-class ClientFactory
+class ClientFactory extends ContainerAware
 {
-    /**
-     * @var DataCollectorMiddleware
-     */
-    private $middleware;
-
-    public function __construct(DataCollectorMiddleware $middleware)
-    {
-        $this->middleware = $middleware;
-    }
-
-
     /**
      * @param array $hosts
      * @param LoggerInterface $logger
@@ -37,9 +28,14 @@ class ClientFactory
             $builder->setLogger($logger);
         }
 
-        $handler = $this->middleware->createHandler(ClientBuilder::defaultHandler(), 'elasticsearch');
-
-        $builder->setHandler($handler);
+        if ($this->container->has('ring_php.handler_factory')) {
+            /** @var RingPHPHandlerFactory $handlerFactory */
+            $handlerFactory = $this->container->get('ring_php.handler_factory');
+            $builder->setHandler($handlerFactory->create(
+                ClientBuilder::defaultHandler(),
+                'elastic'
+            ));
+        }
 
         return $builder->build();
     }
