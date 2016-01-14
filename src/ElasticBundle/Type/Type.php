@@ -44,6 +44,14 @@ class Type
     }
 
     /**
+     * @return string
+     */
+    protected function getIndexId()
+    {
+        return $this->index->getId();
+    }
+
+    /**
      * Creates client request params appending options that define the index and type.
      *
      * @param array $params

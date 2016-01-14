@@ -16,58 +16,58 @@ class TransformerManager
 
     /**
      * @param TransformerInterface $transformer
-     * @param string $indexName
+     * @param string $indexId
      * @param string $typeName
      */
-    public function registerTransformer(TransformerInterface $transformer, $indexName, $typeName)
+    public function registerTransformer(TransformerInterface $transformer, $indexId, $typeName)
     {
         $className = $transformer->getClass();
 
-        if (isset($this->transfomers[$className][$indexName][$typeName])) {
-            throw new TransformerAlreadyRegisteredException($className, $indexName, $typeName);
+        if (isset($this->transfomers[$className][$indexId][$typeName])) {
+            throw new TransformerAlreadyRegisteredException($className, $indexId, $typeName);
         }
 
-        $this->transfomers[$className][$indexName][$typeName] = $transformer;
+        $this->transfomers[$className][$indexId][$typeName] = $transformer;
     }
 
     /**
      * @param object $entity
-     * @param string $indexName
+     * @param string $indexId
      * @param string $typeName
      * @return TransformerInterface
      */
-    protected function getTransformer($entity, $indexName, $typeName)
+    protected function getTransformer($entity, $indexId, $typeName)
     {
         $className = get_class($entity);
 
         $classKey = ClassUtils::findClassKey($className, $this->transfomers);
 
         if (!$classKey) {
-            throw new TransformerNotFoundException($className, $indexName, $typeName);
+            throw new TransformerNotFoundException($className, $indexId, $typeName);
         }
 
-        return $this->transfomers[$classKey][$indexName][$typeName];
+        return $this->transfomers[$classKey][$indexId][$typeName];
     }
 
     /**
      * @param object $entity
-     * @param string $indexName
+     * @param string $indexId
      * @param string $typeName
      * @return Document[]
      */
-    public function transformToDocuments($entity, $indexName, $typeName)
+    public function transformToDocuments($entity, $indexId, $typeName)
     {
-        return $this->getTransformer($entity, $indexName, $typeName)->transformToDocuments($entity);
+        return $this->getTransformer($entity, $indexId, $typeName)->transformToDocuments($entity);
     }
 
     /**
      * @param object $entity
-     * @param string $indexName
+     * @param string $indexId
      * @param string $typeName
      * @return string[]|int[]
      */
-    public function transformToIds($entity, $indexName, $typeName)
+    public function transformToIds($entity, $indexId, $typeName)
     {
-        return $this->getTransformer($entity, $indexName, $typeName)->transformToIds($entity);
+        return $this->getTransformer($entity, $indexId, $typeName)->transformToIds($entity);
     }
 }

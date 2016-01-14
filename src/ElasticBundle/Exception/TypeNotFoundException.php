@@ -6,12 +6,12 @@ class TypeNotFoundException extends \RuntimeException
 {
     /**
      * @param string $typeName
-     * @param string $indexName
+     * @param string $indexId
      */
-    public function __construct($typeName, $indexName = null)
+    public function __construct($typeName, $indexId = null)
     {
-        if (null !== $indexName) {
-            $message = sprintf('Type "%s.%s" not found.', $indexName, $typeName);
+        if (null !== $indexId) {
+            $message = sprintf('Type "%s.%s" not found.', $indexId, $typeName);
         } else {
             $message = sprintf('Type "%s" not found in any index.', $typeName);
         }

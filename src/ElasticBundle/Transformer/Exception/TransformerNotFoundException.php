@@ -6,15 +6,15 @@ class TransformerNotFoundException extends \RuntimeException
 {
     /**
      * @param string $className
-     * @param string $indexName
+     * @param string $indexId
      * @param string $typeName
      */
-    public function __construct($className, $indexName, $typeName)
+    public function __construct($className, $indexId, $typeName)
     {
         parent::__construct(
             sprintf('No transformer was found for class "%s" in type "%s.%s".',
                 $className,
-                $indexName,
+                $indexId,
                 $typeName
             )
         );

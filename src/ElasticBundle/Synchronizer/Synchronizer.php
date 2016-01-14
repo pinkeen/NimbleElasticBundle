@@ -107,7 +107,7 @@ class Synchronizer implements SynchronizerInterface
      */
     protected function performAction($action, $entity)
     {
-        $indexName = $this->type->getIndex()->getName();
+        $indexId = $this->type->getIndex()->getId();
         $typeName = $this->type->getName();
         $ids = [];
 
@@ -116,7 +116,7 @@ class Synchronizer implements SynchronizerInterface
             case self::ACTION_UPDATE:
                 $documents = $this->transformer->transformToDocuments(
                     $entity,
-                    $indexName,
+                    $indexId,
                     $typeName
                 );
 
@@ -136,7 +136,7 @@ class Synchronizer implements SynchronizerInterface
             case self::ACTION_DELETE:
                 $ids = $this->transformer->transformToIds(
                     $entity,
-                    $indexName,
+                    $indexId,
                     $typeName
                 );
 
@@ -147,7 +147,7 @@ class Synchronizer implements SynchronizerInterface
             $this->logger->info(sprintf('Performed %s synchronization for entity "%s" to "%s/%s" type, affected document ids: ["%s"].',
                 strtoupper($action),
                 get_class($entity),
-                $indexName,
+                $indexId,
                 $typeName,
                 implode(', ', $ids)
             ));

@@ -12,6 +12,8 @@ use Nimble\ElasticBundle\Type\Type;
 class Index
 {
     /**
+     * The actual index name used for querying elasticsearch.
+     *
      * @var string
      */
     private $name;
@@ -32,14 +34,24 @@ class Index
     private $types = [];
 
     /**
+     * Internal index id.
+     * Used for naming services and internal identification.
+     *
+     * @var string
+     */
+    private $id;
+
+    /**
+     * @param string $id Internal index name.
      * @param string $name
      * @param Client $client
      * @param array $settings
      * @param array $types
      */
-    public function __construct($name, Client $client, array $settings, array $types)
+    public function __construct($id, $name = null, Client $client, array $settings, array $types)
     {
-        $this->name = $name;
+        $this->id = $id;
+        $this->name = null === $name ? $id : $name;
         $this->client = $client;
         $this->settings = $settings;
 
@@ -77,6 +89,22 @@ class Index
     public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAliased()
+    {
+        return $this->id !== $this->name;
     }
 
     /**

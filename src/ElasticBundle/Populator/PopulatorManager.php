@@ -28,17 +28,17 @@ class PopulatorManager
     }
 
     /**
-     * @param $indexName
+     * @param $indexId
      * @param $typeName
      * @param PopulationFetcherInterface $fetcher
      */
-    public function registerFetcher(PopulationFetcherInterface $fetcher, $indexName, $typeName)
+    public function registerFetcher(PopulationFetcherInterface $fetcher, $indexId, $typeName)
     {
-        if (isset($this->fetchers[$indexName][$typeName])) {
-            throw new PopulationFetcherAlreadyRegisteredException($indexName, $typeName);
+        if (isset($this->fetchers[$indexId][$typeName])) {
+            throw new PopulationFetcherAlreadyRegisteredException($indexId, $typeName);
         }
 
-        $this->fetchers[$indexName][$typeName] = $fetcher;
+        $this->fetchers[$indexId][$typeName] = $fetcher;
     }
 
     /**
@@ -47,14 +47,14 @@ class PopulatorManager
      */
     protected function getFetcherForType(Type $type)
     {
-        $indexName = $type->getIndex()->getName();
+        $indexId = $type->getIndex()->getId();
         $typeName = $type->getName();
 
-        if (!isset($this->fetchers[$indexName][$typeName])) {
-            throw new PopulationFetcherNotFoundException($indexName, $typeName);
+        if (!isset($this->fetchers[$indexId][$typeName])) {
+            throw new PopulationFetcherNotFoundException($indexId, $typeName);
         }
 
-        return $this->fetchers[$indexName][$typeName];
+        return $this->fetchers[$indexId][$typeName];
     }
 
     /**

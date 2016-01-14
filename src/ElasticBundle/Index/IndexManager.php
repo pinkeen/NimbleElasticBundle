@@ -16,13 +16,13 @@ class IndexManager
      */
     public function registerIndex(Index $index)
     {
-        if (array_key_exists($index->getName(), $this->indexes)) {
+        if (array_key_exists($index->getId(), $this->indexes)) {
             throw new \InvalidArgumentException(
-                sprintf('Index "%s" is already registered.', $index->getName())
+                sprintf('Index "%s" is already registered.', $index->getId())
             );
         }
 
-        $this->indexes[$index->getName()] = $index;
+        $this->indexes[$index->getId()] = $index;
     }
 
     /**
@@ -50,7 +50,7 @@ class IndexManager
     /**
      * @return array
      */
-    public function getIndexNames()
+    public function getIndexIds()
     {
         return array_keys($this->indexes);
     }

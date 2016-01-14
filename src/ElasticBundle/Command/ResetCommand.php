@@ -32,37 +32,52 @@ class ResetCommand extends AbstractBaseCommand
     }
 
     /**
-     * @param array $indexNames
+     * @param array $indexIds
      * @param OutputInterface $output
      */
-    protected function resetIndexes(array $indexNames, OutputInterface $output)
+    protected function resetIndexes(array $indexIds, OutputInterface $output)
     {
-        foreach ($indexNames as $indexName) {
-            $this->writeTaskStart($output, sprintf('Resetting index <info>%s</info>', $indexName));
+        foreach ($indexIds as $indexId) {
+            $this->writeTaskStart($output, sprintf('Resetting index <info>%s</info>', $indexId));
 
-            $this->getIndexManager()->getIndex($indexName)->reset();
+            $index = $this->getIndexManager()->getIndex($indexId);
+
+            if ($index->isAliased()) {
+                $output->writeln(sprintf('Index is aliased - using elasticsearch index <info>%s</info>.',
+                    $index->getName()
+                ));
+            }
+
+            $index->reset();
 
             $this->writeTaskSuccess($output);
         }
     }
 
     /**
-     * @param array $indexNames
+     * @param array $indexIds
      * @param string $typeName
      * @param OutputInterface $output
      */
-    protected function resetType(array $indexNames, $typeName, OutputInterface $output)
+    protected function resetType(array $indexIds, $typeName, OutputInterface $output)
     {
         $typeFound = false;
 
-        foreach ($indexNames as $indexName) {
-            $index = $this->getIndexManager()->getIndex($indexName);
+        foreach ($indexIds as $indexId) {
+            $index = $this->getIndexManager()->getIndex($indexId);
 
             if (!$index->hasType($typeName)) {
                 continue;
             }
 
-            $this->writeTaskStart($output, sprintf('Resetting type <info>%s.%s</info> ... ', $indexName, $typeName));
+            $this->writeTaskStart($output, sprintf('Resetting type <info>%s.%s</info> ... ', $indexId, $typeName));
+
+            if ($index->isAliased()) {
+                $output->writeln(sprintf('Index is aliased - using elasticsearch type <info>%s.%s</info>.',
+                    $index->getName(),
+                    $typeName
+                ));
+            }
 
             $index->getType($typeName)->reset();
             $typeFound = true;
@@ -84,23 +99,23 @@ class ResetCommand extends AbstractBaseCommand
 
         $indexManager = $this->getIndexManager();
 
-        $indexName = $input->getOption('index');
+        $indexId = $input->getOption('index');
         $typeName = $input->getOption('type');
 
-        if (null !== $indexName) {
-            $indexNames = [$indexName];
+        if (null !== $indexId) {
+            $indexIds = [$indexId];
         } else {
-            $indexNames = $indexManager->getIndexNames();
+            $indexIds = $indexManager->getIndexIds();
         }
 
-        if (empty($indexNames)) {
+        if (empty($indexIds)) {
             throw new \RuntimeException('No indexes found.');
         }
 
         if (null !== $typeName) {
-            $this->resetType($indexNames, $typeName, $output);
+            $this->resetType($indexIds, $typeName, $output);
         } else {
-            $this->resetIndexes($indexNames, $output);
+            $this->resetIndexes($indexIds, $output);
         }
 
         $this->writeSuccessMessage($output, 'Reset finished successfully.');

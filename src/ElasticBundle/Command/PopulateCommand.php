@@ -52,9 +52,16 @@ class PopulateCommand extends AbstractBaseCommand
         $progress = $this->createProgressBar($output);
 
         $output->writeln(sprintf('Populating type <info>%s.%s</info>.',
-            $type->getIndex()->getName(),
+            $type->getIndex()->getId(),
             $type->getName()
         ));
+
+        if ($type->getIndex()->isAliased()) {
+            $output->writeln(sprintf('Index is aliased - using elasticsearch type <info>%s.%s</info>.',
+                $type->getIndex()->getName(),
+                $type->getName()
+            ));
+        }
 
         $count = $this->getPopulatorManager()->createPopulator($type)->populate($batchSize, $progress);
 
@@ -75,14 +82,14 @@ class PopulateCommand extends AbstractBaseCommand
 
         $indexManager = $this->getIndexManager();
 
-        $indexName = $input->getOption('index');
+        $indexId = $input->getOption('index');
         $typeName = $input->getOption('type');
         $batchSize = $input->getOption('batch');
 
         /* TODO: Throw message if index/type not found or no fetcher for selected type defined. */
 
         foreach ($indexManager->getIndexes() as $index) {
-            if (null !== $indexName && $index->getName() !== $indexName) {
+            if (null !== $indexId && $index->getId() !== $indexId) {
                 continue;
             }
 

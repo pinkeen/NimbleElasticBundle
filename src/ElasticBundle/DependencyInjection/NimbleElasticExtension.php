@@ -86,8 +86,8 @@ class NimbleElasticExtension extends Extension
      */
     protected function processIndexes(array $indexesConfig, ContainerBuilder $container)
     {
-        foreach ($indexesConfig as $indexName => $indexConfig) {
-            $indexServiceId = sprintf('nimble_elastic.index.%s', $indexName);
+        foreach ($indexesConfig as $indexId => $indexConfig) {
+            $indexServiceId = sprintf('nimble_elastic.index.%s', $indexId);
             $clientServiceId = 'nimble_elastic.client';
 
             $typesConfig = $indexConfig['types'];
@@ -97,7 +97,8 @@ class NimbleElasticExtension extends Extension
             }
 
             $indexDefinition = new Definition('Nimble\ElasticBundle\Index\Index', [
-                $indexName,
+                $indexId,
+                $indexConfig['name'],
                 new Reference($clientServiceId),
                 $indexConfig['settings'],
                 $this->buildTypesSettings($typesConfig)
@@ -107,29 +108,29 @@ class NimbleElasticExtension extends Extension
 
             $container->setDefinition($indexServiceId, $indexDefinition);
 
-            $this->processTypes($typesConfig, $indexName, $indexServiceId, $container);
+            $this->processTypes($typesConfig, $indexId, $indexServiceId, $container);
         }
     }
 
     /**
      * @param array $typesConfig
-     * @param string $indexName
+     * @param string $indexId
      * @param string $indexServiceId
      * @param ContainerBuilder $container
      */
-    protected function processTypes(array $typesConfig, $indexName, $indexServiceId, ContainerBuilder $container)
+    protected function processTypes(array $typesConfig, $indexId, $indexServiceId, ContainerBuilder $container)
     {
         $populatorManagerServiceDefinition = $container->getDefinition('nimble_elastic.populator_manager');
 
         foreach ($typesConfig as $typeName => $typeConfig) {
-            $typeServiceId = sprintf('nimble_elastic.type.%s.%s', $indexName, $typeName);
+            $typeServiceId = sprintf('nimble_elastic.type.%s.%s', $indexId, $typeName);
 
             $typeServiceDefinition = new Definition('Nimble\ElasticBundle\Type\Type', [$typeName]);
             $typeServiceDefinition->setFactory([new Reference($indexServiceId), 'getType']);
 
             $container->setDefinition($typeServiceId, $typeServiceDefinition);
 
-            $this->processEntities($typeConfig['entities'], $indexName, $typeServiceId, $typeName, $container);
+            $this->processEntities($typeConfig['entities'], $indexId, $typeServiceId, $typeName, $container);
 
             /* TODO: Break this into function. Allow to register fetchers via tags. */
             if (isset($typeConfig['fetcher'])) {
@@ -142,7 +143,7 @@ class NimbleElasticExtension extends Extension
                 if (isset($typeConfig['fetcher']['service'])) {
                     $fetcherServiceId = $typeConfig['fetcher']['service'];
                 } elseif (isset($typeConfig['fetcher']['doctrine_orm_entity'])) {
-                    $fetcherServiceId = sprintf("nimble.elastic.fetcher.%s.%s", $indexName, $typeName);
+                    $fetcherServiceId = sprintf("nimble.elastic.fetcher.%s.%s", $indexId, $typeName);
 
                     $fetcherServiceDefinition = new Definition(
                         'Nimble\ElasticBundle\Doctrine\ORM\Populator\DoctrineORMPopulationFetcher',
@@ -158,7 +159,7 @@ class NimbleElasticExtension extends Extension
                 if ($fetcherServiceId) {
                     $populatorManagerServiceDefinition->addMethodCall('registerFetcher', [
                         new Reference($fetcherServiceId),
-                        $indexName,
+                        $indexId,
                         $typeName
                     ]);
                 }
@@ -168,18 +169,18 @@ class NimbleElasticExtension extends Extension
 
     /**
      * @param array $entitiesConfig
-     * @param string $indexName
+     * @param string $indexId
      * @param string $typeServiceId
      * @param string $typeName
      * @param ContainerBuilder $container
      */
-    protected function processEntities(array $entitiesConfig, $indexName, $typeServiceId, $typeName, ContainerBuilder $container)
+    protected function processEntities(array $entitiesConfig, $indexId, $typeServiceId, $typeName, ContainerBuilder $container)
     {
         $transformerManagerDefinition = $container->getDefinition('nimble_elastic.transformer_manager');
 
         foreach ($entitiesConfig as $entityClass => $entityConfig) {
             $synchronizerServiceId = sprintf('nimble_elastic.synchronizer.%s.%s.%s',
-                $indexName,
+                $indexId,
                 $typeName,
                 $container->camelize($entityClass)
             );
@@ -202,7 +203,7 @@ class NimbleElasticExtension extends Extension
             if (null !== $entityConfig['transformer_service']) {
                 $transformerManagerDefinition->addMethodCall('registerTransformer', [
                     new Reference($entityConfig['transformer_service']),
-                    $indexName,
+                    $indexId,
                     $typeName
                 ]);
             }

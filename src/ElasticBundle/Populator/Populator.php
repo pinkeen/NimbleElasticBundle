@@ -54,7 +54,7 @@ class Populator
         foreach ($entities as $entity) {
             $documents = array_merge($documents, $this->transformer->transformToDocuments(
                 $entity,
-                $this->type->getIndex()->getName(),
+                $this->type->getIndex()->getId(),
                 $this->type->getName()
             ));
         }
