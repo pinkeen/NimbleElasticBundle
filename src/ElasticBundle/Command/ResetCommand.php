@@ -38,7 +38,6 @@ class ResetCommand extends AbstractBaseCommand
     protected function resetIndexes(array $indexIds, OutputInterface $output)
     {
         foreach ($indexIds as $indexId) {
-            $this->writeTaskStart($output, sprintf('Resetting index <info>%s</info>', $indexId));
 
             $index = $this->getIndexManager()->getIndex($indexId);
 
@@ -47,6 +46,8 @@ class ResetCommand extends AbstractBaseCommand
                     $index->getName()
                 ));
             }
+
+            $this->writeTaskStart($output, sprintf('Resetting index <info>%s</info>', $indexId));
 
             $index->reset();
 
@@ -70,14 +71,14 @@ class ResetCommand extends AbstractBaseCommand
                 continue;
             }
 
-            $this->writeTaskStart($output, sprintf('Resetting type <info>%s.%s</info> ... ', $indexId, $typeName));
-
             if ($index->isAliased()) {
                 $output->writeln(sprintf('Index is aliased - using elasticsearch type <info>%s.%s</info>.',
                     $index->getName(),
                     $typeName
                 ));
             }
+
+            $this->writeTaskStart($output, sprintf('Resetting type <info>%s.%s</info> ... ', $indexId, $typeName));
 
             $index->getType($typeName)->reset();
             $typeFound = true;

@@ -51,17 +51,17 @@ class PopulateCommand extends AbstractBaseCommand
     {
         $progress = $this->createProgressBar($output);
 
-        $output->writeln(sprintf('Populating type <info>%s.%s</info>.',
-            $type->getIndex()->getId(),
-            $type->getName()
-        ));
-
         if ($type->getIndex()->isAliased()) {
             $output->writeln(sprintf('Index is aliased - using elasticsearch type <info>%s.%s</info>.',
                 $type->getIndex()->getName(),
                 $type->getName()
             ));
         }
+
+        $output->writeln(sprintf('Populating type <info>%s.%s</info>.',
+            $type->getIndex()->getId(),
+            $type->getName()
+        ));
 
         $count = $this->getPopulatorManager()->createPopulator($type)->populate($batchSize, $progress);
 
