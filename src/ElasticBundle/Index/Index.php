@@ -211,12 +211,17 @@ class Index
      */
     public function putDocument($type, Document $document)
     {
-        $this->client->index([
+        $data = [
             'index' => $this->name,
             'type' => $type,
-            'id' => $document->getId(),
             'body' => $document->getData(),
-        ]);
+        ];
+
+        if (null !== $document->getId()) {
+            $data['id'] = $document->getId();
+        }
+
+        $this->client->index($data);
     }
 
     /**
