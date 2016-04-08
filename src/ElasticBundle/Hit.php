@@ -182,4 +182,13 @@ class Hit
 
         return $this->data[$this->hitDataKey][$name];
     }
+    
+    /**
+     * @param string $name
+     * @return bool
+     */
+    public function __isset($name)
+    {
+        return array_key_exists($name, $this->data[$this->hitDataKey]);
+    }
 }
