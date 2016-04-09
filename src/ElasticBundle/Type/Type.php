@@ -187,6 +187,16 @@ class Type
     }
 
     /**
+     * @param array|string $query Array that will be serialized or raw JSON.
+     * @param array $options
+     * @return int|null
+     */
+    public function count($query, array $options = [])
+    {
+        return $this->index->count($query, $options, $this->name);
+    }
+
+    /**
      * @param array|string $query
      * @param array $options
      */

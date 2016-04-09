@@ -301,6 +301,21 @@ class Index
     }
 
     /**
+     * @param array|string $query Array that will be serialized or raw JSON.
+     * @param array $options
+     * @param string $type
+     * @return int|null
+     */
+    public function count($query, array $options = [], $type = null)
+    {
+        $data = $this->client->count(
+            $this->buildParams($query, $options, $type)
+        );
+
+        return isset($data['count']) ? $data['count'] : NULL;
+    }
+
+    /**
      * @param array|string $query
      * @param array $options
      * @param string $type
