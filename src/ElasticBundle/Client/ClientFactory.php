@@ -4,13 +4,15 @@ namespace Nimble\ElasticBundle\Client;
 
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
-use Pinkeen\ApiDebugBundle\Bridge\RingPHP\Middleware\DataCollectorMiddleware;
 use Pinkeen\ApiDebugBundle\Bridge\RingPHP\Service\RingPHPHandlerFactory;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\DependencyInjection\ContainerAware;
+use Symfony\Component\DependencyInjection\ContainerAwareInterface;
+use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 
-class ClientFactory extends ContainerAware
+class ClientFactory implements ContainerAwareInterface
 {
+    use ContainerAwareTrait;
+
     /**
      * @param array $hosts
      * @param LoggerInterface $logger
@@ -40,3 +42,4 @@ class ClientFactory extends ContainerAware
         return $builder->build();
     }
 }
+
