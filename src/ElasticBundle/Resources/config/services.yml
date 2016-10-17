@@ -2,12 +2,12 @@ services:
     nimble_elastic.client_factory:
         class: Nimble\ElasticBundle\Client\ClientFactory
         calls:
-            - [setContainer, [@service_container]]
+            - [setContainer, ['@service_container']]
 
     nimble_elastic.client_prototype:
         abstract: true
         factory:
-            - @nimble_elastic.client_factory
+            - '@nimble_elastic.client_factory'
             - createClient
 
     nimble_elastic.index_manager:
@@ -22,10 +22,10 @@ services:
     nimble_elastic.populator_manager:
         class: Nimble\ElasticBundle\Populator\PopulatorManager
         arguments:
-            - @nimble_elastic.transformer_manager
+            - '@nimble_elastic.transformer_manager'
 
     nimble_elastic.doctrine.orm.listener:
         class: Nimble\ElasticBundle\Doctrine\ORM\LifecycleEventSubscriber
         arguments:
-            - @nimble_elastic.synchronizer_manager
+            - '@nimble_elastic.synchronizer_manager'
 
