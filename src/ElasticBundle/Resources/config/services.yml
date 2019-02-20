@@ -1,31 +1,34 @@
+imports:
+    - { resource: services_legacy.yml }
+
 services:
-    nimble_elastic.client_factory:
-        class: Nimble\ElasticBundle\Client\ClientFactory
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    Nimble\ElasticBundle\:
+        resource: '../../*'
+        exclude: '../../{Resources}'
+
+    Nimble\ElasticBundle\Client\ClientFactory:
         calls:
-            - [setContainer, [@service_container]]
+            - [setContainer, ['@service_container']]
 
     nimble_elastic.client_prototype:
         abstract: true
         factory:
-            - @nimble_elastic.client_factory
+            - '@Nimble\ElasticBundle\Client\ClientFactory'
             - createClient
 
-    nimble_elastic.index_manager:
-        class: Nimble\ElasticBundle\Index\IndexManager
+    Nimble\ElasticBundle\Index\IndexManager: ~
+    Nimble\ElasticBundle\Synchronizer\SynchronizerManager: ~
+    Nimble\ElasticBundle\Transformer\TransformerManager: ~
+    Nimble\ElasticBundle\Populator\PopulatorManager: ~
+    Nimble\ElasticBundle\Doctrine\ORM\LifecycleEventSubscriber: ~
 
-    nimble_elastic.synchronizer_manager:
-        class: Nimble\ElasticBundle\Synchronizer\SynchronizerManager
+    Nimble\ElasticBundle\Command\PopulateCommand:
+        tags: ['console.command']
 
-    nimble_elastic.transformer_manager:
-        class: Nimble\ElasticBundle\Transformer\TransformerManager
-
-    nimble_elastic.populator_manager:
-        class: Nimble\ElasticBundle\Populator\PopulatorManager
-        arguments:
-            - @nimble_elastic.transformer_manager
-
-    nimble_elastic.doctrine.orm.listener:
-        class: Nimble\ElasticBundle\Doctrine\ORM\LifecycleEventSubscriber
-        arguments:
-            - @nimble_elastic.synchronizer_manager
-
+    Nimble\ElasticBundle\Command\ResetCommand:
+        tags: ['console.command']

@@ -8,7 +8,7 @@ class RegisterIndexesPass extends RegisterTaggedServiceWithManagerPass
     {
         parent::__construct(
             'nimble_elastic.index',
-            'nimble_elastic.index_manager',
+            'Nimble\ElasticBundle\Index\IndexManager',
             'registerIndex',
             'Nimble\ElasticBundle\Index\Index'
         );

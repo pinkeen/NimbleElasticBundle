@@ -25,11 +25,6 @@ class Populator
     private $transformer;
 
     /**
-     * @var int
-     */
-    private $entityCount;
-
-    /**
      * @param Type $type
      * @param PopulationFetcherInterface $fetcher
      * @param TransformerManager $transformer
@@ -39,8 +34,6 @@ class Populator
         $this->type = $type;
         $this->fetcher = $fetcher;
         $this->transformer = $transformer;
-
-        $this->entityCount = $fetcher->getEntityCount();
     }
 
     /**
@@ -71,15 +64,14 @@ class Populator
      */
     public function populate($batchSize, ProgressBar $progress = null)
     {
+
+        $documentCount = 0;
+        $offset = 0;
         $count = $this->fetcher->getEntityCount();
 
         if ($count === 0) {
             return 0;
         }
-
-        $documentCount = 0;
-
-        $offset = 0;
 
         if (null !== $progress) {
             $progress->start($count);
@@ -88,7 +80,6 @@ class Populator
         while ($offset < $count) {
             $entities = $this->fetcher->fetchEntities($offset, $batchSize);
             $batch = $this->transformEntitiesToDocuments($entities);
-
             $this->type->putDocuments($batch);
 
             if (null !== $progress) {
@@ -97,6 +88,9 @@ class Populator
 
             $documentCount += count($batch);
             $offset += $batchSize;
+
+            unset($entities);
+            unset($batch);
         }
 
         if (null !== $progress) {
