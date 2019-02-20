@@ -14,7 +14,7 @@ class RegisterTransformersPass extends AbstractCompilerPass
      */
     public function process(ContainerBuilder $container)
     {
-        $transformerManagerDefinition = $container->getDefinition('nimble_elastic.transformer_manager');
+        $transformerManagerDefinition = $container->getDefinition('Nimble\ElasticBundle\Transformer\TransformerManager');
 
         foreach ($container->findTaggedServiceIds(self::$tagName) as $transformerServiceId => $tags) {
             foreach ($tags as $attributes) {

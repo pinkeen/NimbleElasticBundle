@@ -1,0 +1,8 @@
+services:
+    nimble_elastic.client_factory: '@Nimble\ElasticBundle\Client\ClientFactory'
+    nimble_elastic.index_manager: '@Nimble\ElasticBundle\Index\IndexManager'
+    nimble_elastic.synchronizer_manager: '@Nimble\ElasticBundle\Synchronizer\SynchronizerManager'
+    nimble_elastic.transformer_manager: '@Nimble\ElasticBundle\Transformer\TransformerManager'
+    nimble_elastic.populator_manager: '@Nimble\ElasticBundle\Populator\PopulatorManager'
+    nimble_elastic.doctrine.orm.listener: '@Nimble\ElasticBundle\Doctrine\ORM\LifecycleEventSubscriber'
+

@@ -11,6 +11,26 @@ use Symfony\Component\Console\Output\OutputInterface;
 class ResetCommand extends AbstractBaseCommand
 {
     /**
+     * @var IndexManager
+     */
+    private $indexManager;
+
+    /**
+     * ResetCommand constructor.
+     *
+     * @param IndexManager $indexManager
+     * @param null|string $name
+     */
+    public function __construct(
+        IndexManager $indexManager,
+        $name = null
+    )
+    {
+        parent::__construct($name);
+        $this->indexManager = $indexManager;
+    }
+
+    /**
      * {@inheritdoc}
      */
     protected function configure()
@@ -24,22 +44,13 @@ class ResetCommand extends AbstractBaseCommand
     }
 
     /**
-     * @return IndexManager
-     */
-    protected function getIndexManager()
-    {
-        return $this->getContainer()->get('nimble_elastic.index_manager');
-    }
-
-    /**
      * @param array $indexIds
      * @param OutputInterface $output
      */
     protected function resetIndexes(array $indexIds, OutputInterface $output)
     {
         foreach ($indexIds as $indexId) {
-
-            $index = $this->getIndexManager()->getIndex($indexId);
+            $index = $this->indexManager->getIndex($indexId);
 
             if ($index->isAliased()) {
                 $output->writeln(sprintf('Index is aliased - using elasticsearch index <info>%s</info>.',
@@ -48,9 +59,7 @@ class ResetCommand extends AbstractBaseCommand
             }
 
             $this->writeTaskStart($output, sprintf('Resetting index <info>%s</info>', $indexId));
-
             $index->reset();
-
             $this->writeTaskSuccess($output);
         }
     }
@@ -65,7 +74,7 @@ class ResetCommand extends AbstractBaseCommand
         $typeFound = false;
 
         foreach ($indexIds as $indexId) {
-            $index = $this->getIndexManager()->getIndex($indexId);
+            $index = $this->indexManager->getIndex($indexId);
 
             if (!$index->hasType($typeName)) {
                 continue;
@@ -79,10 +88,8 @@ class ResetCommand extends AbstractBaseCommand
             }
 
             $this->writeTaskStart($output, sprintf('Resetting type <info>%s.%s</info> ... ', $indexId, $typeName));
-
             $index->getType($typeName)->reset();
             $typeFound = true;
-
             $this->writeTaskSuccess($output);
         }
 
@@ -97,16 +104,13 @@ class ResetCommand extends AbstractBaseCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $this->configureFormatter($output);
-
-        $indexManager = $this->getIndexManager();
-
         $indexId = $input->getOption('index');
         $typeName = $input->getOption('type');
 
         if (null !== $indexId) {
             $indexIds = [$indexId];
         } else {
-            $indexIds = $indexManager->getIndexIds();
+            $indexIds = $this->indexManager->getIndexIds();
         }
 
         if (empty($indexIds)) {

@@ -8,7 +8,7 @@ class RegisterSynchronizersPass extends RegisterTaggedServiceWithManagerPass
     {
         parent::__construct(
             'nimble_elastic.synchronizer',
-            'nimble_elastic.synchronizer_manager',
+            'Nimble\ElasticBundle\Synchronizer\SynchronizerManager',
             'registerSynchronizer',
             'Nimble\ElasticBundle\Synchronizer\SynchronizerInterface'
         );

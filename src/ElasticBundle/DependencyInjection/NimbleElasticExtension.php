@@ -120,7 +120,7 @@ class NimbleElasticExtension extends Extension
      */
     protected function processTypes(array $typesConfig, $indexId, $indexServiceId, ContainerBuilder $container)
     {
-        $populatorManagerServiceDefinition = $container->getDefinition('nimble_elastic.populator_manager');
+        $populatorManagerServiceDefinition = $container->getDefinition('Nimble\ElasticBundle\Populator\PopulatorManager');
 
         foreach ($typesConfig as $typeName => $typeConfig) {
             $typeServiceId = sprintf('nimble_elastic.type.%s.%s', $indexId, $typeName);
@@ -176,7 +176,7 @@ class NimbleElasticExtension extends Extension
      */
     protected function processEntities(array $entitiesConfig, $indexId, $typeServiceId, $typeName, ContainerBuilder $container)
     {
-        $transformerManagerDefinition = $container->getDefinition('nimble_elastic.transformer_manager');
+        $transformerManagerDefinition = $container->getDefinition('Nimble\ElasticBundle\Transformer\TransformerManager');
 
         foreach ($entitiesConfig as $entityClass => $entityConfig) {
             $synchronizerServiceId = sprintf('nimble_elastic.synchronizer.%s.%s.%s',
@@ -191,7 +191,7 @@ class NimbleElasticExtension extends Extension
                 $entityConfig['on_create'],
                 $entityConfig['on_update'],
                 $entityConfig['on_delete'],
-                new Reference('nimble_elastic.transformer_manager'),
+                new Reference('Nimble\ElasticBundle\Transformer\TransformerManager'),
                 $entityConfig['logger_service'] ? new Reference($entityConfig['logger_service']) : null,
             ]);
 
@@ -218,7 +218,7 @@ class NimbleElasticExtension extends Extension
     {
         /* Enables doctrine orm event subscriber by tagging it. */
         if ($listeners['doctrine_orm']['enabled']) {
-            $listenerDefinition = $container->getDefinition('nimble_elastic.doctrine.orm.listener');
+            $listenerDefinition = $container->getDefinition('Nimble\ElasticBundle\Doctrine\ORM\LifecycleEventSubscriber');
             $listenerDefinition->addTag('doctrine.event_subscriber', [
                 'connection' => $listeners['doctrine_orm']['connection'],
             ]);
